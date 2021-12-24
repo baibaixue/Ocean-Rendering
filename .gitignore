@@ -1,0 +1,10 @@
+
+.vs/*
+Library/*
+Logs/*
+obj/*
+Temp/*
+
+Assembly-CSharp.csproj
+Ocean rendering.sln
+Ocean-Rendering.sln
