@@ -1,14 +1,53 @@
-﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
+﻿#pragma kernel CreateHightSpectrum
 
-// Create a RenderTexture with enableRandomWrite flag and set it
-// with cs.SetTexture
-RWTexture2D<float4> Result;
+// 定义Π和引力常数g
+#define PI 3.141592653f
+#define G 9.8f
 
+// 参数
+int fftSize;				// 频率平面采样点
+int oceanLength;			// 海平面大小
+int A;						// 菲利普参数，影响波浪高度
+float2 windDir;				// 风向
+float windSpeed;			// 风速
+float time;					// 时间
+Buffer<float> GaussianRandomList;// 高斯随机数
+
+
+float CreatePhillipsSpectrum(float2 k);
+float2 complexMultiply(float2 a, float2 b);
+// 生成高度频谱
 [numthreads(8,8,1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+void CreateHightSpectrum(uint3 id: SV_DispatchThreadID)
 {
-    // TODO: insert actual code here!
+	float2 k = float2((2.0f * PI * id.x - PI * fftSize) / oceanLength,(2.0f * PI * id.y -  PI *  fftSize) / oceanLength );
+	int gaussianIndex = (id.x * fftSize + id.y) * 2;
+	float2 gaussian = float2(GaussianRandomList[gaussianIndex],GaussianRandomList[gaussianIndex + 1]);
+	float2 h0 = gaussian * sqrt(CreatePhillipsSpectrum(k) / 2.0f);	// h0(k)
+	float2 h0Conj = gaussian * sqrt(CreatePhillipsSpectrum(-k) / 2.0f);
+	h0Conj.y *= -1.0f;	// h0(k) 的共轭复数
 
-    Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+	float omegatKt = sqrt(G * length(k)) * time;
+	// 欧拉公式，e^it = cos(t) + isin(t)
+	float c = cos(omegatKt);
+	float s = sin(omegatKt);
+
+	float2 h1 = complexMultiply(h0, float2(c,s));
+	float2 h2 = complexMultiply(h0Conj, float2(c,-s));
+
+	float2 HResult = h1 + h2;
+}
+// 生成菲利普(PhillipsSpectrum)频谱
+float CreatePhillipsSpectrum(float2 k)
+{
+	float kLength = length(k);
+	float windLength = length(windDir);
+	float L = windSpeed * windSpeed / G;
+	float2 KW = dot(k,windDir);
+	return A * exp(-1.0f / (pow(kLength * L,2))) / (pow(kLength,4)) * pow(length(KW),2);
+}
+// 复数乘法
+float2 complexMultiply(float2 a, float2 b)
+{
+	return float2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
 }

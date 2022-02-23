@@ -128,7 +128,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4721319
 Transform:
   m_ObjectHideFlags: 0
@@ -443,7 +443,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 755760837}
-  - component: {fileID: 755760836}
   - component: {fileID: 755760835}
   m_Layer: 0
   m_Name: FFTOcean
@@ -451,7 +450,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &755760835
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -464,22 +463,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c357c6020ca628f44a727c0b0f34ed2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  oceanMaterial: {fileID: 0}
---- !u!114 &755760836
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 755760834}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 60aece64420bb754b9c4ee2cb588fff8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
   meshSize: 100
-  meshLength: 512
+  meshLength: 9
   oceanMaterial: {fileID: 2100000, guid: 23ee723ac1a521848a8eaebdec7b7d6b, type: 2}
+  GaussianRandomRT: {fileID: 0}
 --- !u!4 &755760837
 Transform:
   m_ObjectHideFlags: 0
