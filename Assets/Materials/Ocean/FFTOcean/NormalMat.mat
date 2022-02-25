@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: GerstnerWaveMat
-  m_Shader: {fileID: 4800000, guid: a614f7d56e59b684493afc1a618fb930, type: 3}
+  m_Name: NormalMat
+  m_Shader: {fileID: 4800000, guid: 926f2beddeaea5549beaa473eb4281b1, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -21,10 +21,6 @@ Material:
     m_TexEnvs:
     - _BumpMap:
         m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _BumpTex:
-        m_Texture: {fileID: 2800000, guid: ea26bc232b0a60345aa795a15d6bd7ed, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -60,13 +56,10 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _Amplitude: 0.77
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _Frequency: 1
-    - _Gloss: 60
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
@@ -74,22 +67,11 @@ Material:
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _Sharpness: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
-    - _Speed: 4
     - _SrcBlend: 1
     - _UVSec: 0
-    - _WaveLength: 5
-    - _WaveX: 0.5
-    - _WaveZ: 1
     - _ZWrite: 1
     m_Colors:
-    - _Amplitude: {r: 3, g: 4, b: 2, a: 3}
-    - _Color: {r: 0.44949272, g: 0.7293701, b: 0.8584906, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _Specular: {r: 1, g: 1, b: 1, a: 1}
-    - _Speed: {r: 60, g: -40, b: 50, a: -40}
-    - _WaveLength: {r: 400, g: 800, b: 600, a: 600}
-    - _WaveX: {r: -6, g: -10, b: 10, a: -6}
-    - _WaveZ: {r: 4, g: 2, b: -4, a: 4}

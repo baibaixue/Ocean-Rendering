@@ -13,14 +13,27 @@ public class FFTOcean : MonoBehaviour
     public int meshSize = 100;      // 网格大小，每行/列的顶点数
     public int meshLength = 512;      // 整个网格的长宽,海平面大小，对应Lx与Lz(方形海域Lx=Lz)
     public int samplingPoint = 9;   // 频域坐标采样点数量（2的指数幂），对应N,M (N=M)
+    public float DisplaceScale = 1;   // 水平偏移
+    public float HeightScale = 1;     // 数值偏移
     private int fftSize;          // pow(2,samplingPoint)
     private int[] vertIndex;        // 网格三角形索引
     private Vector3[] position;     // 网格顶点位置
     private Vector2[] uv;           // 顶点uv坐标
     private Vector3[] normal;       // 顶点法向量
     // 材质
-    public Material oceanMaterial;
+    public Material oceanMaterial;              // 海洋材质
+    public Material DisplaceMat;                // 显示偏移纹理材质
+    public Material NormalMat;                  // 显示法线纹理材质
+
+    private RenderTexture DisplaceRT;           // 偏移纹理
+    private RenderTexture NormalRT;             // 法线纹理
+    // 频谱数据
     private RenderTexture HeightSpectrumRT;     // 高度频谱
+    private RenderTexture DeviationXSpectrumRT; // x偏移频谱
+    private RenderTexture DeviationZSpectrumRT; // z偏移频谱
+    private RenderTexture GradientXSpectrumRT;  // x梯度频谱
+    private RenderTexture GradientZSpectrumRT;  // z梯度频谱
+    private RenderTexture TempRT;               // 临时存储中间过程
     // 海洋参数
     public ComputeShader oceanCS;             // 计算海洋的compute shader
     private float[] gaussianRandom;           // 高斯随机数
@@ -34,8 +47,11 @@ public class FFTOcean : MonoBehaviour
     private float time = 0;                     // 时间
 
     // KernelID
-    private int kernelCreateHightSpectrum;      // 生成高度频谱
-
+    private int kernelCreateHeightSpectrum;      // 生成高度频谱
+    private int kernelCreateDeviationSpectrum;   // 生成偏移频谱
+    private int kernelCreateGradientSpectrum;    // 生成梯度频谱
+    private int kernelFFT;                       // FFT运算
+    private int kernelCreateRenderTexture;       // 生成纹理
     private void Awake()
     {
         mesh = new Mesh();
@@ -134,11 +150,29 @@ public class FFTOcean : MonoBehaviour
         if (HeightSpectrumRT != null && HeightSpectrumRT.IsCreated())
         {
             HeightSpectrumRT.Release();
+            DeviationXSpectrumRT.Release();
+            DeviationZSpectrumRT.Release();
+            GradientXSpectrumRT.Release();
+            GradientZSpectrumRT.Release();
+            TempRT.Release();
+            DisplaceRT.Release();
+            NormalRT.Release();
         }
         // 创建RenderTexture
         HeightSpectrumRT = CreateRenderTexture(fftSize);
+        DeviationXSpectrumRT = CreateRenderTexture(fftSize);
+        DeviationZSpectrumRT = CreateRenderTexture(fftSize);
+        GradientXSpectrumRT = CreateRenderTexture(fftSize);
+        GradientZSpectrumRT = CreateRenderTexture(fftSize);
+        TempRT = CreateRenderTexture(fftSize);
+        DisplaceRT = CreateRenderTexture(fftSize);
+        NormalRT = CreateRenderTexture(fftSize);
         // 获取kernelID
-        kernelCreateHightSpectrum = oceanCS.FindKernel("CreateHightSpectrum");
+        kernelCreateHeightSpectrum = oceanCS.FindKernel("CreateHeightSpectrum");
+        kernelCreateDeviationSpectrum = oceanCS.FindKernel("CreateDeviationSpectrum");
+        kernelCreateGradientSpectrum = oceanCS.FindKernel("CreateGradientSpectrum");
+        kernelFFT = oceanCS.FindKernel("FFT");
+        kernelCreateRenderTexture = oceanCS.FindKernel("CreateRenderTexture");
         // 设置初始Compute Shader 数据
         oceanCS.SetInt("fftSize", fftSize);
         oceanCS.SetInt("oceanLength", meshLength);
@@ -146,20 +180,81 @@ public class FFTOcean : MonoBehaviour
         CreateGaussianRandom();
         gaussBuff = new ComputeBuffer(gaussianRandom.Length, 4);
         gaussBuff.SetData(gaussianRandom);
-        oceanCS.SetBuffer(kernelCreateHightSpectrum, "GaussianRandomList", gaussBuff);
+        oceanCS.SetBuffer(kernelCreateHeightSpectrum, "GaussianRandomList", gaussBuff);
     }
     // 每帧计算海洋数据
     private void CreateComputeShaderValue()
     {
+        windDir.Normalize();
         oceanCS.SetFloat("A", amplitude);
         oceanCS.SetFloat("time", time);
-        windDir.Normalize();
         oceanCS.SetVector("windDir", windDir * windSpeed);
         oceanCS.SetFloat("windSpeed", windSpeed);
 
         // 生成高度频谱
-        oceanCS.SetTexture(kernelCreateHightSpectrum, "CreateHightSpectrum", HeightSpectrumRT);
-        oceanCS.Dispatch(kernelCreateHightSpectrum, fftSize / 8, fftSize / 8, 1);
+        oceanCS.SetTexture(kernelCreateHeightSpectrum, "HeightSpectrumRT", HeightSpectrumRT);
+        oceanCS.Dispatch(kernelCreateHeightSpectrum, fftSize / 8, fftSize / 8, 1);
+        // 生成偏移频谱
+        oceanCS.SetTexture(kernelCreateDeviationSpectrum, "HeightSpectrumRT", HeightSpectrumRT);
+        oceanCS.SetTexture(kernelCreateDeviationSpectrum, "DeviationXSpectrumRT", DeviationXSpectrumRT);
+        oceanCS.SetTexture(kernelCreateDeviationSpectrum, "DeviationZSpectrumRT", DeviationZSpectrumRT);
+        oceanCS.Dispatch(kernelCreateDeviationSpectrum, fftSize / 8, fftSize / 8, 1);
+        // 生成梯度频谱
+        oceanCS.SetTexture(kernelCreateGradientSpectrum, "HeightSpectrumRT", HeightSpectrumRT);
+        oceanCS.SetTexture(kernelCreateGradientSpectrum, "GradientXSpectrumRT", GradientXSpectrumRT);
+        oceanCS.SetTexture(kernelCreateGradientSpectrum, "GradientZSpectrumRT", GradientZSpectrumRT);
+        oceanCS.Dispatch(kernelCreateGradientSpectrum, fftSize / 8, fftSize / 8, 1);
+        /*
+        for (int i = 1; i <= samplingPoint; i++)
+        {
+            // 横向向fft
+            oceanCS.SetInt("isHV", 2);
+            // 设置当前的阶段
+            oceanCS.SetInt("stage", i);
+            int isFFTEnd = i == samplingPoint ? 1 : 0;
+            // 是否是FFT的最后一个阶段
+            oceanCS.SetInt("isFFTEnd", isFFTEnd);
+            
+            ComputeFFT(kernelFFT, ref HeightSpectrumRT);
+            ComputeFFT(kernelFFT, ref DeviationXSpectrumRT);
+            ComputeFFT(kernelFFT, ref DeviationZSpectrumRT);
+            ComputeFFT(kernelFFT, ref GradientXSpectrumRT);
+            ComputeFFT(kernelFFT, ref GradientZSpectrumRT);
+        }
+        for (int i = 1; i <= samplingPoint; i++)
+        {
+            // 纵向向fft
+            oceanCS.SetInt("isHV", 1);
+            // 设置当前的阶段
+            oceanCS.SetInt("stage", i);
+            int isFFTEnd = i == samplingPoint ? 1 : 0;
+            // 是否是FFT的最后一个阶段
+            oceanCS.SetInt("isFFTEnd", isFFTEnd);
+
+            ComputeFFT(kernelFFT, ref HeightSpectrumRT);
+            ComputeFFT(kernelFFT, ref DeviationXSpectrumRT);
+            ComputeFFT(kernelFFT, ref DeviationZSpectrumRT);
+            ComputeFFT(kernelFFT, ref GradientXSpectrumRT);
+            ComputeFFT(kernelFFT, ref GradientZSpectrumRT);
+        }
+        
+        
+        
+        // 生成纹理
+        oceanCS.SetFloat("HeightScale", HeightScale);
+        oceanCS.SetFloat("DisplaceScale", DisplaceScale);
+
+        oceanCS.SetTexture(kernelCreateRenderTexture, "HeightSpectrumRT", HeightSpectrumRT);
+        oceanCS.SetTexture(kernelCreateRenderTexture, "DeviationXSpectrumRT", DeviationXSpectrumRT);
+        oceanCS.SetTexture(kernelCreateRenderTexture, "DeviationZSpectrumRT", DeviationZSpectrumRT);
+        oceanCS.SetTexture(kernelCreateRenderTexture, "GradientXSpectrumRT", GradientXSpectrumRT);
+        oceanCS.SetTexture(kernelCreateRenderTexture, "GradientZSpectrumRT", GradientZSpectrumRT);
+        oceanCS.SetTexture(kernelCreateRenderTexture, "DisplaceRT", DisplaceRT);
+        oceanCS.SetTexture(kernelCreateRenderTexture, "NormalRT", NormalRT);
+        oceanCS.Dispatch(kernelCreateRenderTexture, fftSize / 8, fftSize / 8, 1);
+        */
+        SetMaterialTexture();
+        
     }
     // 创建渲染纹理
     private RenderTexture CreateRenderTexture(int size)
@@ -169,7 +264,23 @@ public class FFTOcean : MonoBehaviour
         rt.Create();
         return rt;
     }
-    
+    // 设置渲染纹理
+    private void SetMaterialTexture()
+    {
+        oceanMaterial.SetTexture("_Displace", DisplaceRT);
+        oceanMaterial.SetTexture("_Normal", NormalRT);
+        NormalMat.SetTexture("_MainTex", HeightSpectrumRT);
+        DisplaceMat.SetTexture("_MainTex", DeviationXSpectrumRT);
+        //NormalMat.SetTexture("_MainTex", DeviationZSpectrumRT);
+    }
+    private void ComputeFFT(int kernelID, ref RenderTexture inputRT)
+    {
+        oceanCS.SetTexture(kernelID, "InputFFT", inputRT);
+        oceanCS.SetTexture(kernelID, "OutputFFT", TempRT);
+        oceanCS.Dispatch(kernelID, fftSize / 8, fftSize / 8, 1);
+
+        inputRT = TempRT;
+    }
     private void DebugData()
     {
         string filePath = "../Debug/GaussianData.csv";
@@ -185,5 +296,10 @@ public class FFTOcean : MonoBehaviour
         }
 
         File.WriteAllText(filePath, builder.ToString(), Encoding.UTF8);
+    }
+    // 结束时将buffer释放
+    private void OnDisable()
+    {
+        gaussBuff.Dispose();
     }
 }

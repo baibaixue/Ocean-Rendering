@@ -464,9 +464,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   meshSize: 100
-  meshLength: 9
+  meshLength: 2048
+  samplingPoint: 9
+  DisplaceScale: 1
+  HeightScale: 1
   oceanMaterial: {fileID: 2100000, guid: 23ee723ac1a521848a8eaebdec7b7d6b, type: 2}
-  GaussianRandomRT: {fileID: 0}
+  DisplaceMat: {fileID: 2100000, guid: b3b9ce49680615a49bd6136228a04e12, type: 2}
+  NormalMat: {fileID: 2100000, guid: fd01758cd06809443959521355483bf4, type: 2}
+  oceanCS: {fileID: 7200000, guid: 278c9c441f3af8147b23bfd713c19613, type: 3}
+  windDir: {x: -0.638, y: 0.6}
+  windSpeed: 800
+  amplitude: 70
+  timeScale: 1
 --- !u!4 &755760837
 Transform:
   m_ObjectHideFlags: 0
