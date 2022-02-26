@@ -472,9 +472,9 @@ MonoBehaviour:
   DisplaceMat: {fileID: 2100000, guid: b3b9ce49680615a49bd6136228a04e12, type: 2}
   NormalMat: {fileID: 2100000, guid: fd01758cd06809443959521355483bf4, type: 2}
   oceanCS: {fileID: 7200000, guid: 278c9c441f3af8147b23bfd713c19613, type: 3}
-  windDir: {x: -0.638, y: 0.6}
-  windSpeed: 800
-  amplitude: 70
+  windDir: {x: -1, y: 1}
+  windSpeed: 400
+  amplitude: 20
   timeScale: 1
 --- !u!4 &755760837
 Transform:

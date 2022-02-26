@@ -10,14 +10,14 @@
 // 参数
 int fftSize;				// 频率平面采样点(N)
 int oceanLength;			// 海平面大小
-int A;						// 菲利普参数，影响波浪高度
+float A;						// 菲利普参数，影响波浪高度
 float2 windDir;				// 风向
 float windSpeed;			// 风速
 float time;					// 时间
 float HeightScale;			// 高度偏移
 float DisplaceScale;		// 水平偏移
-Buffer<float> GaussianRandomList;// 高斯随机数
-
+Buffer<float> GaussianRandomList;		// h0高斯随机数
+Buffer<float> GaussianRandomListConj;	// h0Conj高斯随机数
 int stage;					// fft进行的阶段
 int isHV;					// 纵向横向共两次fft,01(1)为纵向，10(2)为横向
 int isFFTEnd;				// fft的最后一个阶段（需要做特殊处理）
@@ -36,15 +36,18 @@ RWTexture2D<float4> NormalRT;				// 法线纹理
 
 float CreatePhillipsSpectrum(float2 k);		// 计算菲利普频谱
 float2 complexMultiply(float2 a, float2 b); // 复数乘法
+float DonelanBannerDirectionalSpreading(float2 k);
 // 生成高度频谱
 [numthreads(8,8,1)]
 void CreateHeightSpectrum(uint3 id: SV_DispatchThreadID)
 {
 	float2 k = float2((2.0f * PI * id.x - PI * fftSize) / oceanLength,(2.0f * PI * id.y -  PI *  fftSize) / oceanLength );
-	int gaussianIndex = ((id.x - 1) * fftSize + id.y) * 2;
+	//float2 k = float2(2.0f * PI * id.x / fftSize - PI, 2.0f * PI * id.y / fftSize - PI);
+	int gaussianIndex = (id.x * fftSize + id.y) * 2;
 	float2 gaussian = float2(GaussianRandomList[gaussianIndex],GaussianRandomList[gaussianIndex + 1]);
+	float2 gaussianConj = float2(GaussianRandomListConj[gaussianIndex],GaussianRandomListConj[gaussianIndex + 1]);
 	float2 h0 = gaussian * sqrt(CreatePhillipsSpectrum(k) / 2.0f);	// h0(k)
-	float2 h0Conj = gaussian * sqrt(CreatePhillipsSpectrum(-k) / 2.0f);
+	float2 h0Conj = gaussianConj * sqrt(CreatePhillipsSpectrum(-k) / 2.0f);
 	h0Conj.y *= -1.0f;	// h0(k) 的共轭复数
 
 	float omegatKt = sqrt(G * length(k)) * time;
@@ -56,15 +59,15 @@ void CreateHeightSpectrum(uint3 id: SV_DispatchThreadID)
 	float2 h2 = complexMultiply(h0Conj, float2(c,-s));
 
 	float2 HResult = h1 + h2;
-	//float phillips = CreatePhillipsSpectrum(k);
-	HeightSpectrumRT[id.xy] = float4(HResult,0,0);
-	//HeightSpectrumRT[id.xy] = float4(h0,0,0);
+	float phillips = CreatePhillipsSpectrum(k);
+	HeightSpectrumRT[id.xy] = float4(HResult ,0 ,0);
 }
 // 生成偏移频谱
 [numthreads(8,8,1)]
 void CreateDeviationSpectrum(uint3 id: SV_DispatchThreadID)
 {
 	float2 k = float2((2.0f * PI * id.x - PI * fftSize) / oceanLength,(2.0f * PI * id.y -  PI *  fftSize) / oceanLength );
+	//float2 k = float2(2.0f * PI * id.x / fftSize - PI, 2.0f * PI * id.y / fftSize - PI);
 	k /= max(0.001f, length(k));
 	float2 HeightInfo = HeightSpectrumRT[id.xy].xy;
 
@@ -79,6 +82,7 @@ void CreateDeviationSpectrum(uint3 id: SV_DispatchThreadID)
 void CreateGradientSpectrum(uint3 id: SV_DispatchThreadID)
 {
 	float2 k = float2((2.0f * PI * id.x - PI * fftSize) / oceanLength,(2.0f * PI * id.y -  PI *  fftSize) / oceanLength );
+	//float2 k = float2(2.0f * PI * id.x / fftSize - PI, 2.0f * PI * id.y / fftSize - PI);
 	float2 HeightInfo = HeightSpectrumRT[id.xy].xy;
 
 	float2 XGradient = complexMultiply(float2(0,k.x), HeightInfo);
@@ -98,7 +102,7 @@ void FFT(uint3 id: SV_DispatchThreadID)
 	float angle = 2.0f * PI * (n / (nStage * 2.0f)); // angle = 2πn/NS
 	float2 W = float2(cos(angle),sin(angle));	// e^it = cost + isint
 	// 最后一步FFT中，权值W符号取反 -> (-1)^n
-	W = W + isFFTEnd * (-2.0f * W);				
+	W *= isFFTEnd;				
 
 	// 这里求第一个复数的位置索引
 	int2 indexStage = id.xy;
@@ -106,34 +110,34 @@ void FFT(uint3 id: SV_DispatchThreadID)
 	indexStage.y = id.y * isH + isV * (floor(id.y / (nStage * 2.0f)) * nStage + id.y % nStage);
 	// 第二个复数的位置索引，是第一个复数的索引 + fftSize / 2.0f
 	int2 indexStageR = indexStage + fftSize * 0.5f * int2(isH,isV);
-
+	//int2 indexStageR = int2(indexStage.x + fftSize * 0.5f * isH,indexStage.y + fftSize * 0.5f * isV);
 	float2 x0 = InputFFT[indexStage].xy;
 	float2 x1 = InputFFT[indexStageR].xy;
 
 	float2 Output = x0 + complexMultiply(W,x1);
 	// 最后一步FFT中， 最终结果需要 * (-1)^x (横向) | * (-1)^y(纵向)
-	int q = isH * id.x + isV * id.y - fftSize / 2.0f;
-	Output = Output + isFFTEnd * (q % 2.0f) * (-2.0f * Output);
+	int q = n - fftSize * 0.5f;
+	Output *= (((q + 1) % 2.0f) * 1 + (q % 2.0f) * (-1)) * isFFTEnd;
 
 	OutputFFT[id.xy] = float4(Output,0,0);
-
+	
 }
 // 生成渲染纹理(偏移纹理,法线纹理等)
 [numthreads(8,8,1)]
 void CreateRenderTexture(uint3 id: SV_DispatchThreadID)
 {
-	//float x = length(DeviationXSpectrumRT[id.xy].xy) / (fftSize * fftSize) * DisplaceScale;
-	//float y = length(HeightSpectrumRT[id.xy].xy) / (fftSize * fftSize) * HeightScale;
-	//float z = length(DeviationZSpectrumRT[id.xy].xy) / (fftSize * fftSize) * DisplaceScale;
+	float x = length(DeviationXSpectrumRT[id.xy].xy) / (fftSize * fftSize )* DisplaceScale;
+	float y = length(HeightSpectrumRT[id.xy].xy) / (fftSize * fftSize)* HeightScale ;
+	float z = length(DeviationZSpectrumRT[id.xy].xy) / (fftSize * fftSize )* DisplaceScale;
 
-	float x = DeviationXSpectrumRT[id.xy].x * DisplaceScale;
-	float y = HeightSpectrumRT[id.xy].x * HeightScale;
-	float z = HeightSpectrumRT[id.xy].x * DisplaceScale;
+	//float x = DeviationXSpectrumRT[id.xy].x * DisplaceScale;
+	//float y = HeightSpectrumRT[id.xy].x * HeightScale;
+	//float z = HeightSpectrumRT[id.xy].x * DisplaceScale;
 
 	DisplaceRT[id.xy] = float4(x,y,z,0);
 
-	float gx = GradientXSpectrumRT[id.xy].x;
-	float gz = GradientZSpectrumRT[id.xy].x;
+	float gx = length(GradientXSpectrumRT[id.xy].xy) / (fftSize * fftSize) * DisplaceScale;
+	float gz = length(GradientZSpectrumRT[id.xy].xy) / (fftSize * fftSize) * DisplaceScale;
 
 	NormalRT[id.xy] = float4(normalize(float3(-gx,1,-gz)),0);
 }
@@ -141,13 +145,39 @@ void CreateRenderTexture(uint3 id: SV_DispatchThreadID)
 float CreatePhillipsSpectrum(float2 k)
 {
 	float kLength = length(k);
+	kLength = max(0.001f, kLength);
 	float k2 = kLength * kLength;
 	float k4 = k2 * k2;
 	float L = windSpeed * windSpeed / G;
 	float L2 = L * L ;
-	float KWLen = k.x * windDir.x + k.y * windDir.y;
-	return A * exp(-1.0f / (k2 * L2)) / k4 * KWLen * KWLen * exp(-k2 * 0.001f * 0.001f);
-	//return A * exp(-1.0f / (k2 * L2)) / k4 * exp(-k2 * L2);
+	float KWLen = abs(dot(k,windDir));
+	//return A * exp(-1.0f / (k2 * L2)) / k4 * KWLen * KWLen * exp(-k2 * 0.001f * 0.001f);
+	//return A * exp(-1.0f / (k2 * L2)) / k4 * exp(-k2 * L2 * 0.001f * 0.001f);
+	return A * exp(-1.0f / (k2 * L2)) / k4 * exp(-k2 * 0.001f * 0.001f);
+	//return A * exp(-1.0f / (k2 * L2)) / k4 * KWLen * KWLen * exp(-k2 * 0.001f * 0.001f);
+}
+float DonelanBannerDirectionalSpreading(float2 k)
+{
+    float betaS;
+    float omegap = 0.855f * G / windSpeed;
+    float ratio = sqrt(G * length(k)) / omegap;
+
+    if (ratio < 0.95f)
+    {
+        betaS = 2.61f * pow(ratio, 1.3f);
+    }
+    if(ratio >= 0.95f && ratio < 1.6f)
+    {
+        betaS = 2.28f * pow(ratio, -1.3f);
+    }
+    if(ratio > 1.6f)
+    {
+        float epsilon = -0.4f + 0.8393f * exp(-0.567f * log(ratio * ratio));
+        betaS = pow(10, epsilon);
+    }
+    float theta = atan2(k.y, k.x) - atan2(windDir.y * windSpeed, windDir.x * windSpeed);
+
+    return betaS / max(1e-7f, 2.0f * tanh(betaS * PI) * pow(cosh(betaS * theta), 2));
 }
 // 复数乘法
 float2 complexMultiply(float2 a, float2 b)
