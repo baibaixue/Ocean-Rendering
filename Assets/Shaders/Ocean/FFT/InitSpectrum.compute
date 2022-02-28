@@ -1,0 +1,59 @@
+﻿#pragma kernel InitPhillipsSpectrum
+// 定义引力常数Π
+#define G 9.8f
+#define PI 3.14159265f
+// 输入
+int fftSize;				// 频谱采样大小 (必须是2的指数幂) 
+int OceanLength;			// 海面大小
+int Depth;					// 水深
+Texture2D<float4> Noise;	// 高斯随机数纹理
+// 菲利普参数
+float2 WindDir;				// 风向
+float WindSpeed;			// 风速
+float Wave_A;				// 波浪的振幅
+
+// 输出结果
+RWTexture2D<float4> WaveData;	// 用于计算的波数据 float4(kx,kz,|k|,omega(k))
+RWTexture2D<float4> H0;	
+RWTexture2D<float4> H0Conj;	// H0的共轭复数
+
+// 菲利普频谱
+float Phillips(float2 k)
+{
+	float k_length = length(k);
+	k_length = max(0.0001f, k_length);	// k不为0
+	float k2 = k_length * k_length;
+	float k4 = k2 * k2;
+
+	float k_dot_w = dot(normalize(k),WindDir);
+	k_dot_w = max(0.001f,k_dot_w);
+	float k_dot_w2 = k_dot_w * k_dot_w;
+	float L = WindSpeed * WindSpeed / G;
+	float L2 = L * L;
+
+	float damping = 0.001f;
+	float l2 =  damping * damping;
+	return Wave_A * exp(-1.0f / (k2 * L2)) / k4 * k_dot_w2 * k_dot_w2 * k_dot_w2 * k_dot_w2 * exp(-k2 * l2);
+}
+// 计算omega(k)
+float OmegaK(float k)
+{
+	return sqrt(G * k * tanh(min(k * Depth,20)));
+}
+// 初始化菲利普频谱
+[numthreads(8,8,1)]
+void InitPhillipsSpectrum(uint3 id: SV_DispatchthreadID)
+{
+	float2 k = float2(2 * PI * (id.x - fftSize * 0.5f) / OceanLength, 2 * PI * (id.y - fftSize * 0.5f) / OceanLength);
+	float k_length = length(k);
+	k_length = max(0.0001f, k_length);
+	float omegaK = OmegaK(k_length);
+	
+	float2 h0 = Noise[id.xy].xy * sqrt(Phillips(k) / 2);
+	float2 h0Conj = Noise[id.xy].zw * sqrt(Phillips(-k) / 2);
+	h0Conj.y *= -1;
+
+	WaveData[id.xy] = float4(k.x,k.y,k_length,omegaK);
+	H0[id.xy] = float4(h0,0,0);
+	H0Conj[id.xy] = float4(h0Conj,0,0);
+}

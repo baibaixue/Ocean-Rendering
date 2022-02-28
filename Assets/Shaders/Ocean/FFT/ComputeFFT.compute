@@ -1,0 +1,61 @@
+﻿#pragma kernel ComputeFFTH
+#pragma kernel ComputeFFTV
+
+int fftSize;
+int stage;			// FFT 进行的阶段
+int isEnd;			// 最后一步符号修正
+Texture2D<float4> ButterflyRT;
+RWTexture2D<float4> InputRT;
+RWTexture2D<float4> OutputRT;
+// 复数乘法
+float2 ComplexMultiplication(float2 a, float2 b)
+{
+	return float2(a.x * b.x - a.y * b.y, a.y * b.x + a.x * b.y);
+}
+// 横向FFT
+[numthreads(8,8,1)]
+void ComputeFFTH(uint3 id : SV_DispatchThreadID)
+{
+	int2 btfIdx = int2(id.x,stage);
+
+	int2 index = int2((int)ButterflyRT[btfIdx].x,id.y);
+	int2 index2 = int2((int)ButterflyRT[btfIdx].y,id.y);
+	float2 w = ButterflyRT[btfIdx].zw;
+
+	float2 OutputXY = InputRT[index].xy + ComplexMultiplication(w,InputRT[index2].xy);
+	float2 OutputZW = InputRT[index].zw + ComplexMultiplication(w,InputRT[index2].zw);
+
+	// 符号修正
+	//int coord = id.x - fftSize * 0.5f;	// 空间坐标表示
+	int coord = id.x;	// 空间坐标表示
+	float sign = (-1.0f * (coord % 2.0f) + (coord + 1.0f) % 2.0f) * isEnd + (isEnd + 1.0f) % 2.0f;
+
+	OutputRT[id.xy] = float4(OutputXY * sign,OutputZW * sign);
+}
+// 纵向FFT
+[numthreads(8,8,1)]
+void ComputeFFTV(uint3 id : SV_DispatchThreadID)
+{
+	int2 btfIdx = int2(id.y,stage);
+
+	int2 index = int2(id.x, ButterflyRT[btfIdx].x);
+	int2 index2 = int2(id.x, ButterflyRT[btfIdx].y);
+	float2 w = ButterflyRT[btfIdx].zw;
+
+	float2 OutputXY = InputRT[index].xy + ComplexMultiplication(w,InputRT[index2].xy);
+	float2 OutputZW = InputRT[index].zw + ComplexMultiplication(w,InputRT[index2].zw);
+
+	// 符号修正
+	//int coord = id.y - fftSize * 0.5f;	// 空间坐标表示
+	int coord = id.y;
+	float sign = (-1.0f * (coord % 2.0f) + (coord + 1.0f) % 2.0f) * isEnd + (isEnd + 1.0f) % 2.0f;
+
+	OutputRT[id.xy] = float4(OutputXY * sign,OutputZW * sign);
+}
+
+// 符号修正
+[numthreads(8,8,1)]
+void CorrectSign(uint3 id : SV_DispatchThreadID)
+{
+
+}

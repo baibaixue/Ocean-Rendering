@@ -100,14 +100,14 @@ Properties
                 //泡沫颜色
                 fixed3 bubblesDiffuse = _BubblesColor.rbg * _LightColor0.rgb * saturate(dot(lightDir, normal));
                 //海洋颜色
-                //fixed3 oceanDiffuse = oceanColor * _LightColor0.rgb * saturate(dot(lightDir, normal));
+                fixed3 oceanDiffuse = oceanColor * _LightColor0.rgb * saturate(dot(lightDir, normal));
                 fixed3 halfDir = normalize(lightDir + viewDir);
                 fixed3 specular = _LightColor0.rgb * _Specular.rgb * pow(max(0, dot(normal, halfDir)), _Gloss);
                 
-                fixed3 diffuse = _LightColor0.rgb * saturate(dot(lightDir, normal));
+                //fixed3 diffuse = _LightColor0.rgb * saturate(dot(lightDir, normal));
                 
-                //fixed3 col = ambient + lerp(diffuse, sky, fresnel) + specular ;
-                fixed3 col = ambient + diffuse + specular ;
+                fixed3 col = ambient + lerp(oceanDiffuse, sky, fresnel) + specular ;
+                //fixed3 col = ambient + diffuse + specular ;
                 return fixed4(col, 1);
             }
             ENDCG

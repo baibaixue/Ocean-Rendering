@@ -1,0 +1,52 @@
+﻿#pragma kernel CreateSpectrumWithTime
+#pragma kernel CreateRenderTextureWithTime
+
+float time;		// 时间
+// 波形
+RWTexture2D<float4> WaveData; // (kx,kz,|k|,omega(k))
+// 初始频谱
+RWTexture2D<float4> H0;
+RWTexture2D<float4> H0Conj;
+// 高度，位移，梯度频谱
+RWTexture2D<float4> HeightSpectrumRT;
+RWTexture2D<float4> DisplacementSpectrumRT;
+RWTexture2D<float4> GradientSpectrumRT;
+// 法线纹理和位移纹理
+RWTexture2D<float4> NormalRT;
+RWTexture2D<float4> DisplaceRT;
+// 复数乘法
+float2 ComplexMultiplication(float2 a, float2 b)
+{
+	return float2(a.x * b.x - a.y * b.y, a.y * b.x + a.x * b.y);
+}
+// 计算每帧的高度，位移，梯度频谱
+[numthreads(8,8,1)]
+void CreateSpectrumWithTime(uint3 id : SV_DispatchThreadID)
+{
+	float omegaKT = WaveData[id.xy].w * time;
+	float c = cos(omegaKT);
+	float s = sin(omegaKT);
+
+	float2 h = ComplexMultiplication(float2(c,s),H0[id.xy].xy) + ComplexMultiplication(float2(c,-s),H0Conj[id.xy].xy);
+
+	HeightSpectrumRT[id.xy] = float4(h,0,0);
+	DisplacementSpectrumRT[id.xy] =	float4(	ComplexMultiplication(float2(0,-WaveData[id.xy].x / WaveData[id.xy].z), h),
+											ComplexMultiplication(float2(0,-WaveData[id.xy].y / WaveData[id.xy].z), h));
+	GradientSpectrumRT[id.xy] = float4(	ComplexMultiplication(float2(0,WaveData[id.xy].x),h),
+										ComplexMultiplication(float2(0,WaveData[id.xy].y),h));
+}
+
+// 创建渲染纹理
+[numthreads(8,8,1)]
+void CreateRenderTextureWithTime (uint3 id : SV_DispatchThreadID)
+{
+	float x = ((DisplacementSpectrumRT[id.xy].x + DisplacementSpectrumRT[id.xy].y));
+	float z = ((DisplacementSpectrumRT[id.xy].z + DisplacementSpectrumRT[id.xy].w));
+	float y = ((HeightSpectrumRT[id.xy].x + HeightSpectrumRT[id.xy].y));
+
+	float gx = ((GradientSpectrumRT[id.xy].x + GradientSpectrumRT[id.xy].y));
+	float gz = ((GradientSpectrumRT[id.xy].z + GradientSpectrumRT[id.xy].w));
+
+	DisplaceRT[id.xy] = float4(x,y,z,0);
+	NormalRT[id.xy] = normalize(float4(-gx,1.0f,-gz,0));
+}

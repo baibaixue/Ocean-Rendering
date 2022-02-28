@@ -151,9 +151,9 @@ float CreatePhillipsSpectrum(float2 k)
 	float L = windSpeed * windSpeed / G;
 	float L2 = L * L ;
 	float KWLen = abs(dot(k,windDir));
-	//return A * exp(-1.0f / (k2 * L2)) / k4 * KWLen * KWLen * exp(-k2 * 0.001f * 0.001f);
+	return A * exp(-1.0f / (k2 * L2)) / k4 * KWLen * KWLen * exp(-k2 * 0.001f * 0.001f);
 	//return A * exp(-1.0f / (k2 * L2)) / k4 * exp(-k2 * L2 * 0.001f * 0.001f);
-	return A * exp(-1.0f / (k2 * L2)) / k4 * exp(-k2 * 0.001f * 0.001f);
+	//return A * exp(-1.0f / (k2 * L2)) / k4 * exp(-k2 * 0.001f * 0.001f);
 	//return A * exp(-1.0f / (k2 * L2)) / k4 * KWLen * KWLen * exp(-k2 * 0.001f * 0.001f);
 }
 float DonelanBannerDirectionalSpreading(float2 k)

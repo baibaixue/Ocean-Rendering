@@ -463,18 +463,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c357c6020ca628f44a727c0b0f34ed2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  meshSize: 100
-  meshLength: 2048
-  samplingPoint: 9
-  DisplaceScale: 1
-  HeightScale: 1
+  meshSize: 200
+  OceanLength: 1000
+  FFTPow: 9
+  DisplaceScale: 50
+  HeightScale: 50
   oceanMaterial: {fileID: 2100000, guid: 23ee723ac1a521848a8eaebdec7b7d6b, type: 2}
   DisplaceMat: {fileID: 2100000, guid: b3b9ce49680615a49bd6136228a04e12, type: 2}
   NormalMat: {fileID: 2100000, guid: fd01758cd06809443959521355483bf4, type: 2}
-  oceanCS: {fileID: 7200000, guid: 278c9c441f3af8147b23bfd713c19613, type: 3}
-  windDir: {x: -1, y: 1}
-  windSpeed: 400
-  amplitude: 20
+  DebugMat: {fileID: 2100000, guid: 33eab9ebc7d2cef439dc802ae01296d5, type: 2}
+  OceanCs: {fileID: 7200000, guid: 278c9c441f3af8147b23bfd713c19613, type: 3}
+  InitSpectrumCs: {fileID: 7200000, guid: 281fb396bfa98c545af94af7f9f24a65, type: 3}
+  ComputeFFTCs: {fileID: 7200000, guid: 61fe4383f297e784a8da0e51b5b21690, type: 3}
+  ComputeWithTimeCs: {fileID: 7200000, guid: 338d8189431b8db41ae11ea3dfd55163, type: 3}
+  windDir: {x: 1, y: 1}
+  windSpeed: 40
+  waveA: 0.00000005
+  depth: 500
   timeScale: 1
 --- !u!4 &755760837
 Transform:
