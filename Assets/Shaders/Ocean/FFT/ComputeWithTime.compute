@@ -2,6 +2,7 @@
 #pragma kernel CreateRenderTextureWithTime
 
 float time;		// 时间
+float divideOceanL;	// 1 / 海面长度
 // 波形
 RWTexture2D<float4> WaveData; // (kx,kz,|k|,omega(k))
 // 初始频谱
@@ -40,12 +41,12 @@ void CreateSpectrumWithTime(uint3 id : SV_DispatchThreadID)
 [numthreads(8,8,1)]
 void CreateRenderTextureWithTime (uint3 id : SV_DispatchThreadID)
 {
-	float x = ((DisplacementSpectrumRT[id.xy].x + DisplacementSpectrumRT[id.xy].y));
-	float z = ((DisplacementSpectrumRT[id.xy].z + DisplacementSpectrumRT[id.xy].w));
-	float y = ((HeightSpectrumRT[id.xy].x + HeightSpectrumRT[id.xy].y));
+	float x = ((DisplacementSpectrumRT[id.xy].x + DisplacementSpectrumRT[id.xy].y)) * divideOceanL;
+	float z = ((DisplacementSpectrumRT[id.xy].z + DisplacementSpectrumRT[id.xy].w)) * divideOceanL;
+	float y = ((HeightSpectrumRT[id.xy].x + HeightSpectrumRT[id.xy].y)) * divideOceanL;
 
-	float gx = ((GradientSpectrumRT[id.xy].x + GradientSpectrumRT[id.xy].y));
-	float gz = ((GradientSpectrumRT[id.xy].z + GradientSpectrumRT[id.xy].w));
+	float gx = ((GradientSpectrumRT[id.xy].x + GradientSpectrumRT[id.xy].y)) * divideOceanL;
+	float gz = ((GradientSpectrumRT[id.xy].z + GradientSpectrumRT[id.xy].w)) * divideOceanL;
 
 	DisplaceRT[id.xy] = float4(-x,y,-z,0);
 	NormalRT[id.xy] = normalize(float4(-gx,1.0f,-gz,0));

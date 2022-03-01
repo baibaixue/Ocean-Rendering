@@ -1,4 +1,5 @@
-﻿Shader "Unlit/FFTOcean"
+﻿// 基于统计模型的FFT波形
+Shader "Unlit/FFTOcean"
 {
 Properties
     {
@@ -10,7 +11,6 @@ Properties
         _FresnelScale ("Fresnel Scale", Range(0, 1)) = 0.5
         _Displace ("Displace", 2D) = "black" { }
         _Normal ("Normal", 2D) = "black" { }
-        _Bubbles ("Bubbles", 2D) = "black" { }
     }
     SubShader
     {

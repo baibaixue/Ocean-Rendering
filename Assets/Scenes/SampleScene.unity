@@ -380,13 +380,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 534669902}
-  m_LocalRotation: {x: 0.3420201, y: 0, z: 0, w: 0.9396927}
-  m_LocalPosition: {x: 0, y: 200, z: -150}
+  m_LocalRotation: {x: 0.4768585, y: 0.26041883, z: -0.15035288, w: 0.8259431}
+  m_LocalPosition: {x: -100, y: 500, z: -300}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 40, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 60, y: 35, z: 0}
 --- !u!114 &534669906
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -463,8 +463,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c357c6020ca628f44a727c0b0f34ed2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  meshSize: 100
-  OceanLength: 1024
+  meshSize: 200
+  OceanLength: 256
   FFTPow: 9
   oceanMaterial: {fileID: 2100000, guid: 23ee723ac1a521848a8eaebdec7b7d6b, type: 2}
   DisplaceMat: {fileID: 2100000, guid: b3b9ce49680615a49bd6136228a04e12, type: 2}
@@ -474,11 +474,18 @@ MonoBehaviour:
   InitSpectrumCs: {fileID: 7200000, guid: 281fb396bfa98c545af94af7f9f24a65, type: 3}
   ComputeFFTCs: {fileID: 7200000, guid: 61fe4383f297e784a8da0e51b5b21690, type: 3}
   ComputeWithTimeCs: {fileID: 7200000, guid: 338d8189431b8db41ae11ea3dfd55163, type: 3}
-  windDir: {x: 0, y: 1}
-  windSpeed: 100
-  waveA: 0.0000001
+  windData:
+  - windDir: {x: 1, y: -1}
+    windSpeed: 50
+  - windDir: {x: 2, y: 1}
+    windSpeed: 50
+  - windDir: {x: -1, y: 2}
+    windSpeed: 70
+  - windDir: {x: -1, y: 1}
+    windSpeed: 100
+  waveA: 0.5
   depth: 500
-  timeScale: 3
+  timeScale: 4
 --- !u!4 &755760837
 Transform:
   m_ObjectHideFlags: 0

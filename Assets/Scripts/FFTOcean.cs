@@ -380,6 +380,8 @@ public class FFTOcean : MonoBehaviour
     /// </summary>
     private void SetMaterialTexture()
     {
+        float divideOceanL = OceanLength == 0 ? 0 : 1.0f / (float)OceanLength;
+        ComputeWithTimeCs.SetFloat("divideOceanL", divideOceanL);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime,"HeightSpectrumRT", HeightSpectrumRT);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime,"DisplacementSpectrumRT", DisplacementSpectrumRT);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "GradientSpectrumRT", GradientSpectrumRT);
