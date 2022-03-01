@@ -106,8 +106,8 @@ Properties
                 
                 //fixed3 diffuse = _LightColor0.rgb * saturate(dot(lightDir, normal));
                 
-                fixed3 col = ambient + lerp(oceanDiffuse, sky, fresnel) + specular ;
-                //fixed3 col = ambient + diffuse + specular ;
+                //fixed3 col = ambient + lerp(oceanDiffuse, sky, fresnel) + specular ;
+                fixed3 col = ambient + oceanDiffuse + specular ;
                 return fixed4(col, 1);
             }
             ENDCG

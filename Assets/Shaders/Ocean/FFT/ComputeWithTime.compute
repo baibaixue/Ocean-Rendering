@@ -30,8 +30,8 @@ void CreateSpectrumWithTime(uint3 id : SV_DispatchThreadID)
 	float2 h = ComplexMultiplication(float2(c,s),H0[id.xy].xy) + ComplexMultiplication(float2(c,-s),H0Conj[id.xy].xy);
 
 	HeightSpectrumRT[id.xy] = float4(h,0,0);
-	DisplacementSpectrumRT[id.xy] =	float4(	ComplexMultiplication(float2(0,-WaveData[id.xy].x / WaveData[id.xy].z), h),
-											ComplexMultiplication(float2(0,-WaveData[id.xy].y / WaveData[id.xy].z), h));
+	DisplacementSpectrumRT[id.xy] =	float4(	ComplexMultiplication(float2(0,-WaveData[id.xy].x * WaveData[id.xy].z), h),
+											ComplexMultiplication(float2(0,-WaveData[id.xy].y * WaveData[id.xy].z), h));
 	GradientSpectrumRT[id.xy] = float4(	ComplexMultiplication(float2(0,WaveData[id.xy].x),h),
 										ComplexMultiplication(float2(0,WaveData[id.xy].y),h));
 }
@@ -47,6 +47,6 @@ void CreateRenderTextureWithTime (uint3 id : SV_DispatchThreadID)
 	float gx = ((GradientSpectrumRT[id.xy].x + GradientSpectrumRT[id.xy].y));
 	float gz = ((GradientSpectrumRT[id.xy].z + GradientSpectrumRT[id.xy].w));
 
-	DisplaceRT[id.xy] = float4(x,y,z,0);
+	DisplaceRT[id.xy] = float4(-x,y,-z,0);
 	NormalRT[id.xy] = normalize(float4(-gx,1.0f,-gz,0));
 }

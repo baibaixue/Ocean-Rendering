@@ -3,7 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEngine;
-
+using System;
+[Serializable]
+public class WindData
+{
+    public Vector2 windDir;
+    public float windSpeed;
+}
 public class FFTOcean : MonoBehaviour
 {
     // 网格生成
@@ -45,8 +51,9 @@ public class FFTOcean : MonoBehaviour
     public ComputeShader ComputeWithTimeCs;         // 计算随时间变换的频谱和纹理的 compute shader
 
 
-    public Vector2 windDir;                         // 风向
-    public float windSpeed;                         // 风速
+    public List<WindData> windData;    
+    //public Vector2 windDir;                         // 风向
+    //public float windSpeed;                         // 风速
     public float waveA;                             // 菲利普参数，影响波浪高度
     public float depth;                             // 水深
     public float timeScale;                         // 时间系数
@@ -54,6 +61,7 @@ public class FFTOcean : MonoBehaviour
     private float time = 0;                         // 时间
 
     // KernelID
+    private int kernelInitH0;                           // 重置H0
     private int kernelInitPhillipsSpectrum;             // 生成初始频谱
     private int kernelCreateSpectrumWithTime;           // 生成每帧的波形频谱
     private int kernelCreateRenderTextureWithTime;      // 生成每帧的纹理
@@ -113,6 +121,7 @@ public class FFTOcean : MonoBehaviour
         NormalRT = CreateRenderTexture(fftSize);
         DisplaceRT = CreateRenderTexture(fftSize);
         // kernelID
+        kernelInitH0 = InitSpectrumCs.FindKernel("InitH0");
         kernelInitPhillipsSpectrum = InitSpectrumCs.FindKernel("InitPhillipsSpectrum");
         kernelComputeFFTH = ComputeFFTCs.FindKernel("ComputeFFTH");
         kernelComputeFFTV = ComputeFFTCs.FindKernel("ComputeFFTV");
@@ -272,7 +281,7 @@ public class FFTOcean : MonoBehaviour
     /// </summary>
     private float GaussianRandom()
     {
-        return Mathf.Cos(2 * Mathf.PI * Random.value) * Mathf.Sqrt(-2 * Mathf.Log(Random.value));
+        return Mathf.Cos(2 * Mathf.PI * UnityEngine.Random.value) * Mathf.Sqrt(-2 * Mathf.Log(UnityEngine.Random.value));
     }
     /// <summary>
     /// 生成初始频谱
@@ -280,19 +289,27 @@ public class FFTOcean : MonoBehaviour
     private void GetInitSpectrum()
     {
         // 创建初始频谱
-        windDir.Normalize();
         InitSpectrumCs.SetInt("fftSize", fftSize);
         InitSpectrumCs.SetInt("OceanLength", OceanLength);
         InitSpectrumCs.SetFloat("Depth", depth);
-        InitSpectrumCs.SetVector("WindDir", windDir);
-        InitSpectrumCs.SetFloat("WindSpeed", windSpeed);
         InitSpectrumCs.SetFloat("Wave_A", waveA);
 
-        InitSpectrumCs.SetTexture(kernelInitPhillipsSpectrum, "WaveData", WaveData);
-        InitSpectrumCs.SetTexture(kernelInitPhillipsSpectrum, "H0", H0);
-        InitSpectrumCs.SetTexture(kernelInitPhillipsSpectrum, "H0Conj", H0Conj);
+        InitSpectrumCs.SetTexture(kernelInitH0, "WaveData", WaveData);
+        InitSpectrumCs.SetTexture(kernelInitH0, "H0", H0);
+        InitSpectrumCs.SetTexture(kernelInitH0, "H0Conj", H0Conj);
+        InitSpectrumCs.Dispatch(kernelInitH0, fftSize / 8, fftSize / 8, 1);
+        for (int i = 0; i < windData.Count; i++)
+        {
+            windData[i].windDir.Normalize();
+            InitSpectrumCs.SetVector("WindDir", windData[i].windDir);
+            InitSpectrumCs.SetFloat("WindSpeed", windData[i].windSpeed);
 
-        InitSpectrumCs.Dispatch(kernelInitPhillipsSpectrum, fftSize / 8, fftSize / 8, 1);
+            InitSpectrumCs.SetTexture(kernelInitPhillipsSpectrum, "WaveData", WaveData);
+            InitSpectrumCs.SetTexture(kernelInitPhillipsSpectrum, "H0", H0);
+            InitSpectrumCs.SetTexture(kernelInitPhillipsSpectrum, "H0Conj", H0Conj);
+            InitSpectrumCs.Dispatch(kernelInitPhillipsSpectrum, fftSize / 8, fftSize / 8, 1);
+        }
+
         // 设置初始频谱
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "H0", H0);
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "H0Conj", H0Conj);
