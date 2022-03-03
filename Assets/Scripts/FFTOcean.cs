@@ -37,12 +37,15 @@ public class FFTOcean : MonoBehaviour
     private RenderTexture WaveData;                 // 记录中间用于计算的波数据
     private RenderTexture DisplaceRT;               // 偏移纹理
     private RenderTexture NormalRT;                 // 法线纹理
+    private RenderTexture ChoppyWavesRT;            // 尖浪纹理（白沫）
     // 频谱数据
     private RenderTexture H0;                       // 初始频谱 h0
     private RenderTexture H0Conj;                   // 初始频谱的共轭复数 h0Conj
     private RenderTexture HeightSpectrumRT;         // 高度频谱
     private RenderTexture DisplacementSpectrumRT;   // 偏移频谱
     private RenderTexture GradientSpectrumRT;       // 梯度频谱
+    private RenderTexture Dxdx_Dxdz;                // DisplacementSpectrumRT.x 关于x,z分别求偏导
+    private RenderTexture Dzdx_Dzdz;                // DisplacementSpectrumRT.z 关于x,z分别求偏导
     private RenderTexture TempRT;                   // 临时存储中间过程
     // 海洋参数
     public ComputeShader OceanCs;                   // 计算海洋的compute shader
@@ -50,8 +53,9 @@ public class FFTOcean : MonoBehaviour
     public ComputeShader ComputeFFTCs;              // 进行FFT运算的compute shader
     public ComputeShader ComputeWithTimeCs;         // 计算随时间变换的频谱和纹理的 compute shader
 
-
-    public List<WindData> windData;    
+    [Range(-1.0f, 1.0f)]
+    public float lambda = 1.0f;                            // 偏移系数
+    public List<WindData> windData;                 // 风信息
     //public Vector2 windDir;                         // 风向
     //public float windSpeed;                         // 风速
     public float waveA;                             // 菲利普参数，影响波浪高度
@@ -109,7 +113,12 @@ public class FFTOcean : MonoBehaviour
             HeightSpectrumRT.Release();
             DisplacementSpectrumRT.Release();
             GradientSpectrumRT.Release();
+            Dxdx_Dxdz.Release();
+            Dzdx_Dzdz.Release();
             TempRT.Release();
+            NormalRT.Release();
+            DisplaceRT.Release();
+            ChoppyWavesRT.Release();
         }
         WaveData = CreateRenderTexture(fftSize);
         H0 = CreateRenderTexture(fftSize);
@@ -117,9 +126,12 @@ public class FFTOcean : MonoBehaviour
         HeightSpectrumRT = CreateRenderTexture(fftSize);
         DisplacementSpectrumRT = CreateRenderTexture(fftSize);
         GradientSpectrumRT = CreateRenderTexture(fftSize);
+        Dxdx_Dxdz = CreateRenderTexture(fftSize);
+        Dzdx_Dzdz = CreateRenderTexture(fftSize);
         TempRT = CreateRenderTexture(fftSize);
         NormalRT = CreateRenderTexture(fftSize);
         DisplaceRT = CreateRenderTexture(fftSize);
+        ChoppyWavesRT = CreateRenderTexture(fftSize);
         // kernelID
         kernelInitH0 = InitSpectrumCs.FindKernel("InitH0");
         kernelInitPhillipsSpectrum = InitSpectrumCs.FindKernel("InitPhillipsSpectrum");
@@ -324,6 +336,8 @@ public class FFTOcean : MonoBehaviour
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "HeightSpectrumRT", HeightSpectrumRT);
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "DisplacementSpectrumRT", DisplacementSpectrumRT);
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "GradientSpectrumRT", GradientSpectrumRT);
+        ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "Dxdx_Dxdz", Dxdx_Dxdz);
+        ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "Dzdx_Dzdz", Dzdx_Dzdz);
         ComputeWithTimeCs.Dispatch(kernelCreateSpectrumWithTime, fftSize / 8, fftSize / 8, 1);
     }
 
@@ -343,6 +357,8 @@ public class FFTOcean : MonoBehaviour
             ComputeFFT(kernelComputeFFTH, ref HeightSpectrumRT);
             ComputeFFT(kernelComputeFFTH, ref DisplacementSpectrumRT);
             ComputeFFT(kernelComputeFFTH, ref GradientSpectrumRT);
+            ComputeFFT(kernelComputeFFTH, ref Dxdx_Dxdz);
+            ComputeFFT(kernelComputeFFTH, ref Dzdx_Dzdz);
         }
         // 纵向运算
         for (int i = 0; i < FFTPow; i++)
@@ -353,6 +369,8 @@ public class FFTOcean : MonoBehaviour
             ComputeFFT(kernelComputeFFTV, ref HeightSpectrumRT);
             ComputeFFT(kernelComputeFFTV, ref DisplacementSpectrumRT);
             ComputeFFT(kernelComputeFFTV, ref GradientSpectrumRT);
+            ComputeFFT(kernelComputeFFTV, ref Dxdx_Dxdz);
+            ComputeFFT(kernelComputeFFTV, ref Dzdx_Dzdz);
         }
     }
     private void ComputeFFT(int kernelID, ref RenderTexture input)
@@ -382,15 +400,21 @@ public class FFTOcean : MonoBehaviour
     {
         float divideOceanL = OceanLength == 0 ? 0 : 1.0f / (float)OceanLength;
         ComputeWithTimeCs.SetFloat("divideOceanL", divideOceanL);
+        ComputeWithTimeCs.SetFloat("lambda", lambda);
+        ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "WaveData", WaveData);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime,"HeightSpectrumRT", HeightSpectrumRT);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime,"DisplacementSpectrumRT", DisplacementSpectrumRT);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "GradientSpectrumRT", GradientSpectrumRT);
+        ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "Dxdx_Dxdz", Dxdx_Dxdz);
+        ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "Dzdx_Dzdz", Dzdx_Dzdz);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "NormalRT", NormalRT);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "DisplaceRT", DisplaceRT);
+        ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "ChoppyWavesRT", ChoppyWavesRT);
         ComputeWithTimeCs.Dispatch(kernelCreateRenderTextureWithTime, fftSize / 8, fftSize / 8, fftSize / 8);
 
         oceanMaterial.SetTexture("_Displace", DisplaceRT);
         oceanMaterial.SetTexture("_Normal", NormalRT);
+        oceanMaterial.SetTexture("_ChoppyWavesRT", ChoppyWavesRT);
         //NormalMat.SetTexture("_MainTex", HeightSpectrumRT);
         DisplaceMat.SetTexture("_MainTex", DisplaceRT);
         //NormalMat.SetTexture("_MainTex", DeviationZSpectrumRT);
@@ -411,7 +435,7 @@ public class FFTOcean : MonoBehaviour
     /// </summary>
     private void SetDebugTexture()
     {
-        DebugMat.SetTexture("_MainTex", DisplacementSpectrumRT);
+        DebugMat.SetTexture("_MainTex", ChoppyWavesRT);
     }
     /// <summary>
     /// 生成蝶形纹理需要用到的比特位调换

@@ -31,6 +31,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ChoppyWavesRT:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _Cubemap:
         m_Texture: {fileID: 8900000, guid: 563c07001d6ac4e47a0d4f593ef730a7, type: 2}
         m_Scale: {x: 1, y: 1}
@@ -149,6 +153,7 @@ Material:
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
+    - _foamScale: 0.5
     m_Colors:
     - _Amplitude: {r: 1, g: 1, b: 1, a: 1}
     - _BubblesColor: {r: 0.3798505, g: 0.8181261, b: 0.8301887, a: 1}
@@ -157,9 +162,10 @@ Material:
     - _FoamColor: {r: 1, g: 1, b: 1, a: 1}
     - _OceanColorDeep: {r: 0, g: 0.06240057, b: 0.11320752, a: 1}
     - _OceanColorShallow: {r: 0.078097194, g: 0.4429451, b: 0.6132076, a: 1}
-    - _SSSColor: {r: 0.28230685, g: 0.8365474, b: 0.9811321, a: 1}
+    - _SSSColor: {r: 0.36209506, g: 0.90263134, b: 0.9716981, a: 1}
     - _Specular: {r: 0.8915094, g: 0.9782562, b: 1, a: 1}
     - _Speed: {r: 1, g: 1, b: 1, a: 1}
     - _WaveLength: {r: 1, g: 1, b: 1, a: 1}
     - _WaveX: {r: 1, g: 1, b: 1, a: 1}
     - _WaveZ: {r: 1, g: 1, b: 1, a: 1}
+    - _foamColor: {r: 0.9765041, g: 0.9811321, b: 0.980601, a: 1}

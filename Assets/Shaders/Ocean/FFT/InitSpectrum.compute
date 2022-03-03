@@ -48,7 +48,7 @@ void InitPhillipsSpectrum(uint3 id: SV_DispatchthreadID)
 	float2 k = WaveData[id.xy].xy;
 	
 	float2 h0 = Noise[id.xy].xy * sqrt(Phillips(k) / 2);
-	float2 h0Conj = Noise[id.xy].zw * sqrt(Phillips(-k) / 2);
+	float2 h0Conj = Noise[id.xy].xy * sqrt(Phillips(-k) / 2);
 	h0Conj.y *= -1;
 
 	H0[id.xy] = H0[id.xy] + float4(h0,0,0);

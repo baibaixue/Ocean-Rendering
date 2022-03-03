@@ -6,6 +6,8 @@ Shader "Unlit/Ocean"
         _Color ("Color",Color) = (1,1,1,1)
         _Displace ("Displace",2D) = "white" {}
         _Normal ("Normal", 2D) = "white" {}
+        // 白沫
+        _ChoppyWavesRT ("Choopy Waves",2D) = "white" {}
         // 高光系数
         _Specular ("Specular", Color) = (1,1,1,1)
         // 高光指数
@@ -23,7 +25,10 @@ Shader "Unlit/Ocean"
         // 次表面失真
         _SSSDistortion ("SSS Distortion", Range(0,1)) = 1
         _SSSPow ("SSS Pow", Range(0,1)) = 1
-
+        // 白沫程度
+        _foamScale ("Foam Scale", Range(0,1)) = 0
+        // 白沫颜色
+        _foamColor ("Foam Color", Color) = (1,1,1,1)
     }
     SubShader
     {
@@ -58,6 +63,7 @@ Shader "Unlit/Ocean"
 
             sampler2D _Displace;
             sampler2D _Normal;
+            sampler2D _ChoppyWavesRT;
             float4 _Displace_ST;
 
             float _Gloss;
@@ -70,6 +76,9 @@ Shader "Unlit/Ocean"
             float _SSSScale;
             float _SSSDistortion;
             float _SSSPow;
+
+            float _foamScale;
+            fixed4 _foamColor;
             v2f vert (appdata v)
             {
                 v2f o;
@@ -113,8 +122,10 @@ Shader "Unlit/Ocean"
                 fixed3 specular = _LightColor0.rgb * _Specular.rgb * pow(max(0,dot(normal, halfDir)), _Gloss);
                 // 菲涅尔反射
                 fixed3 fresnelReflection = lerp(Diffuse, reflection, saturate(fresnel));
-                // sample the texture
-                fixed4 col = float4(ambient + fresnelReflection + specular,0);
+                // 白沫
+                fixed3 foamUV = tex2D(_ChoppyWavesRT,i.uv).rgb;
+                fixed3 foam = saturate((foamUV.r - _foamScale) * -1.0f)  * _foamColor.rgb;
+                fixed4 col = float4(ambient + fresnelReflection + specular + foam,0);
                 return col;
             }
             ENDCG

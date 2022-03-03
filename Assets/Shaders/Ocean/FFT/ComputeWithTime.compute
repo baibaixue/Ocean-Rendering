@@ -3,6 +3,7 @@
 
 float time;		// 时间
 float divideOceanL;	// 1 / 海面长度
+float lambda;
 // 波形
 RWTexture2D<float4> WaveData; // (kx,kz,|k|,omega(k))
 // 初始频谱
@@ -12,9 +13,13 @@ RWTexture2D<float4> H0Conj;
 RWTexture2D<float4> HeightSpectrumRT;
 RWTexture2D<float4> DisplacementSpectrumRT;
 RWTexture2D<float4> GradientSpectrumRT;
+// 用于雅可比行列式的白沫计算
+RWTexture2D<float4> Dxdx_Dxdz;			// DisplacementSpectrumRT.x 关于x,z分别求偏导
+RWTexture2D<float4> Dzdx_Dzdz;			// DisplacementSpectrumRT.z 关于x,z分别求偏导
 // 法线纹理和位移纹理
 RWTexture2D<float4> NormalRT;
 RWTexture2D<float4> DisplaceRT;
+RWTexture2D<float4> ChoppyWavesRT;	// 尖浪纹理（白沫）
 // 复数乘法
 float2 ComplexMultiplication(float2 a, float2 b)
 {
@@ -35,6 +40,10 @@ void CreateSpectrumWithTime(uint3 id : SV_DispatchThreadID)
 											ComplexMultiplication(float2(0,-WaveData[id.xy].y * WaveData[id.xy].z), h));
 	GradientSpectrumRT[id.xy] = float4(	ComplexMultiplication(float2(0,WaveData[id.xy].x),h),
 										ComplexMultiplication(float2(0,WaveData[id.xy].y),h));
+	Dxdx_Dxdz[id.xy] = float4(	ComplexMultiplication(float2(0,WaveData[id.xy].x),DisplacementSpectrumRT[id.xy].xy),
+								ComplexMultiplication(float2(0,WaveData[id.xy].y),DisplacementSpectrumRT[id.xy].xy));
+	Dzdx_Dzdz[id.xy] = float4(	ComplexMultiplication(float2(0,WaveData[id.xy].x),DisplacementSpectrumRT[id.xy].zw),
+								ComplexMultiplication(float2(0,WaveData[id.xy].y),DisplacementSpectrumRT[id.xy].zw));
 }
 
 // 创建渲染纹理
@@ -48,6 +57,19 @@ void CreateRenderTextureWithTime (uint3 id : SV_DispatchThreadID)
 	float gx = ((GradientSpectrumRT[id.xy].x + GradientSpectrumRT[id.xy].y)) * divideOceanL;
 	float gz = ((GradientSpectrumRT[id.xy].z + GradientSpectrumRT[id.xy].w)) * divideOceanL;
 
-	DisplaceRT[id.xy] = float4(-x,y,-z,0);
+	float Dxdx = (Dxdx_Dxdz[id.xy].x + Dxdx_Dxdz[id.xy].y) * divideOceanL ;
+	float Dzdz = (Dzdx_Dzdz[id.xy].z + Dzdx_Dzdz[id.xy].w) * divideOceanL ;
+	float Dxdz = (Dxdx_Dxdz[id.xy].z + Dxdx_Dxdz[id.xy].w) * divideOceanL ;
+	float Dzdx = (Dzdx_Dzdz[id.xy].x + Dzdx_Dzdz[id.xy].y) * divideOceanL ;
+	//float2 Dxdx = GradientSpectrumRT[id.xy].xy ;
+	//float2 Dzdz = GradientSpectrumRT[id.xy].zw ;
+	float jzx = lambda * Dxdz;
+	float jxz = lambda * Dzdx;
+	float jzz = 1.0f + lambda *  Dzdz ;
+	float jxx = 1.0f + lambda *  Dxdx ;
+	float jacobian = jxx * jzz - jxz * jzx;
+
+	DisplaceRT[id.xy] = float4(lambda * x,y,lambda * z,0);
 	NormalRT[id.xy] = normalize(float4(-gx,1.0f,-gz,0));
+	ChoppyWavesRT[id.xy] = float4(jacobian,jacobian,jacobian,0);
 }
