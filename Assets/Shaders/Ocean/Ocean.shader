@@ -95,12 +95,10 @@ Shader "Unlit/Ocean"
                 fixed3 reflection = texCUBE(_Cubemap, reflectDir).rgb;
                 // 菲涅尔系数
                 fixed fresnel = _FresnelScale + (1 - _FresnelScale) * pow(1 - dot(viewDir,normal),5);
-                // 光照衰减
-                UNITY_LIGHT_ATTENUATION(atten,i,i.worldPos);
 
                 fixed3 SSSH = normalize(1.0f * lightDir + normal * _SSSDistortion);
 
-                fixed Iback = atten * _SSSScale * pow(saturate(dot(viewDir,SSSH)),_SSSPow) * i.worldPos.y * 1e-2;
+                fixed Iback =_SSSScale * pow(saturate(dot(viewDir,SSSH)),_SSSPow) * i.worldPos.y * 1e-2;
 
                 //fixed3 SSSColor = lerp(_Color,_SSSColor,saturate(Iback)); 
 
@@ -114,10 +112,9 @@ Shader "Unlit/Ocean"
                 // 镜面反射
                 fixed3 specular = _LightColor0.rgb * _Specular.rgb * pow(max(0,dot(normal, halfDir)), _Gloss);
                 // 菲涅尔反射
-                fixed3 fresnelReflection = lerp(Diffuse, reflection, saturate(fresnel)) * atten;
+                fixed3 fresnelReflection = lerp(Diffuse, reflection, saturate(fresnel));
                 // sample the texture
                 fixed4 col = float4(ambient + fresnelReflection + specular,0);
-
                 return col;
             }
             ENDCG

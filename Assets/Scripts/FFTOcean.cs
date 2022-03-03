@@ -404,7 +404,7 @@ public class FFTOcean : MonoBehaviour
     {
         string filename = name + "Texture" + fftSize.ToString() + "x" + fftSize.ToString();
         string path = "Assets/Resources/Textures/";
-        UnityEditor.AssetDatabase.CreateAsset(texture, path + filename + ".assest");
+        UnityEditor.AssetDatabase.CreateAsset(texture, path + filename + ".asset");
     }
     /// <summary>
     /// 调试，查看中间输出纹理

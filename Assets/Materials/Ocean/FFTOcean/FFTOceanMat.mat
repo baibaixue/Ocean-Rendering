@@ -126,7 +126,7 @@ Material:
     - _FoamBiasLOD2: 1
     - _FoamScale: 1
     - _FresnelScale: 0.05
-    - _Gloss: 178
+    - _Gloss: 252
     - _GlossMapScale: 1
     - _Glossiness: 0.481
     - _GlossyReflections: 1
@@ -139,19 +139,27 @@ Material:
     - _Roughness: 0
     - _RoughnessScale: 0.1
     - _SSSBase: 0
-    - _SSSScale: 4
+    - _SSSDistortion: 1
+    - _SSSPow: 0.763
+    - _SSSScale: 1
     - _SSSStrength: 0.313
+    - _Sharpness: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
+    - _Amplitude: {r: 1, g: 1, b: 1, a: 1}
     - _BubblesColor: {r: 0.3798505, g: 0.8181261, b: 0.8301887, a: 1}
-    - _Color: {r: 0.01966893, g: 0.17477243, b: 0.3207547, a: 1}
+    - _Color: {r: 0.0060074753, g: 0.13363472, b: 0.254717, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FoamColor: {r: 1, g: 1, b: 1, a: 1}
     - _OceanColorDeep: {r: 0, g: 0.06240057, b: 0.11320752, a: 1}
     - _OceanColorShallow: {r: 0.078097194, g: 0.4429451, b: 0.6132076, a: 1}
-    - _SSSColor: {r: 1, g: 1, b: 1, a: 1}
+    - _SSSColor: {r: 0.28230685, g: 0.8365474, b: 0.9811321, a: 1}
     - _Specular: {r: 0.8915094, g: 0.9782562, b: 1, a: 1}
+    - _Speed: {r: 1, g: 1, b: 1, a: 1}
+    - _WaveLength: {r: 1, g: 1, b: 1, a: 1}
+    - _WaveX: {r: 1, g: 1, b: 1, a: 1}
+    - _WaveZ: {r: 1, g: 1, b: 1, a: 1}
