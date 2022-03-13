@@ -11,6 +11,8 @@ Properties
         _FresnelScale ("Fresnel Scale", Range(0, 1)) = 0.5
         _Displace ("Displace", 2D) = "black" { }
         _Normal ("Normal", 2D) = "black" { }
+
+        _OceanLength("Ocean Length",Float) = 512
     }
     SubShader
     {
@@ -50,7 +52,7 @@ Properties
             sampler2D _Normal;
             sampler2D _Bubbles;
             float4 _Displace_ST;
-            
+            float _OceanLength;
             inline half3 SamplerReflectProbe(UNITY_ARGS_TEXCUBE(tex), half3 refDir, half roughness, half4 hdr)
             {
                 roughness = roughness * (1.7 - 0.7 * roughness);

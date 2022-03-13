@@ -412,9 +412,13 @@ public class FFTOcean : MonoBehaviour
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "ChoppyWavesRT", ChoppyWavesRT);
         ComputeWithTimeCs.Dispatch(kernelCreateRenderTextureWithTime, fftSize / 8, fftSize / 8, fftSize / 8);
 
+        DisplaceRT.wrapMode = TextureWrapMode.Repeat;
+        NormalRT.wrapMode = TextureWrapMode.Repeat;
+        ChoppyWavesRT.wrapMode = TextureWrapMode.Repeat;
         oceanMaterial.SetTexture("_Displace", DisplaceRT);
         oceanMaterial.SetTexture("_Normal", NormalRT);
         oceanMaterial.SetTexture("_ChoppyWavesRT", ChoppyWavesRT);
+        oceanMaterial.SetFloat("_OceanLength", OceanLength);
         //NormalMat.SetTexture("_MainTex", HeightSpectrumRT);
         DisplaceMat.SetTexture("_MainTex", DisplaceRT);
         //NormalMat.SetTexture("_MainTex", DeviationZSpectrumRT);

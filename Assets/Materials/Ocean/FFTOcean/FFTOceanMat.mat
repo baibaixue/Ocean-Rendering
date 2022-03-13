@@ -119,6 +119,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _foamTexture:
+        m_Texture: {fileID: 2800000, guid: 9cce65b7897b5ac4eb17a0b2fc34b728, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Floats:
     - _BumpScale: 1
     - _ContactFoam: 1
@@ -130,7 +134,7 @@ Material:
     - _FoamBiasLOD2: 1
     - _FoamScale: 1
     - _FresnelScale: 0.05
-    - _Gloss: 252
+    - _Gloss: 256
     - _GlossMapScale: 1
     - _Glossiness: 0.481
     - _GlossyReflections: 1
@@ -145,7 +149,7 @@ Material:
     - _SSSBase: 0
     - _SSSDistortion: 1
     - _SSSPow: 0.763
-    - _SSSScale: 1
+    - _SSSScale: 0.91
     - _SSSStrength: 0.313
     - _Sharpness: 1
     - _SmoothnessTextureChannel: 0
@@ -153,7 +157,7 @@ Material:
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
-    - _foamScale: 0.5
+    - _foamScale: 0.552
     m_Colors:
     - _Amplitude: {r: 1, g: 1, b: 1, a: 1}
     - _BubblesColor: {r: 0.3798505, g: 0.8181261, b: 0.8301887, a: 1}

@@ -29,6 +29,10 @@ Shader "Unlit/Ocean"
         _foamScale ("Foam Scale", Range(0,1)) = 0
         // 白沫颜色
         _foamColor ("Foam Color", Color) = (1,1,1,1)
+        // 白沫纹理
+        _foamTexture ("Foam Texture", 2D) = "white" {}
+
+        _OceanLength("Ocean Length", float) = 512
     }
     SubShader
     {
@@ -79,10 +83,17 @@ Shader "Unlit/Ocean"
 
             float _foamScale;
             fixed4 _foamColor;
+            sampler2D _foamTexture;
+
+            float _OceanLength;
+
             v2f vert (appdata v)
             {
                 v2f o;
-                o.uv = TRANSFORM_TEX(v.uv,_Displace);  // 对偏移纹理进行采样
+                o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
+                float4 worldUV = float4(o.worldPos.xz,0,0);
+                o.uv = worldUV.xy / _OceanLength + float2(0.5,0.5);
+                o.uv = TRANSFORM_TEX(o.uv,_Displace);  // 对偏移纹理进行采样
                 float4 displace = tex2Dlod(_Displace,float4(o.uv,0,0));
                 v.vertex += float4(displace.xyz,0);
                 o.vertex = UnityObjectToClipPos(v.vertex);
@@ -123,8 +134,11 @@ Shader "Unlit/Ocean"
                 // 菲涅尔反射
                 fixed3 fresnelReflection = lerp(Diffuse, reflection, saturate(fresnel));
                 // 白沫
-                fixed3 foamUV = tex2D(_ChoppyWavesRT,i.uv).rgb;
-                fixed3 foam = saturate((foamUV.r - _foamScale) * -1.0f)  * _foamColor.rgb;
+                fixed3 ChoppyWavesUV = tex2D(_ChoppyWavesRT,i.uv).rgb;
+                fixed3 foamUV = tex2D(_foamTexture,i.uv).rgb;
+                fixed ChoppyWaves = saturate((ChoppyWavesUV.r - _foamScale) * -1.0f);
+                fixed3 foam = lerp(0,foamUV,ChoppyWaves) * _foamColor.rgb;
+                
                 fixed4 col = float4(ambient + fresnelReflection + specular + foam,0);
                 return col;
             }
