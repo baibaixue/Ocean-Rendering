@@ -33,6 +33,8 @@ Shader "Unlit/Ocean"
         _foamTexture ("Foam Texture", 2D) = "white" {}
 
         _OceanLength("Ocean Length", float) = 512
+
+        _LOD_scale("LOD_scale", Range(1,10)) = 0
     }
     SubShader
     {
@@ -87,14 +89,19 @@ Shader "Unlit/Ocean"
 
             float _OceanLength;
 
+            float _LOD_scale;
             v2f vert (appdata v)
             {
                 v2f o;
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
                 float4 worldUV = float4(o.worldPos.xz,0,0);
+                float3 viewVector = _WorldSpaceCameraPos.xyz - mul(unity_ObjectToWorld, v.vertex);
+                float viewDist = length(viewVector);
                 o.uv = worldUV.xy / _OceanLength + float2(0.5,0.5);
                 o.uv = TRANSFORM_TEX(o.uv,_Displace);  // 对偏移纹理进行采样
-                float4 displace = tex2Dlod(_Displace,float4(o.uv,0,0));
+                float4 displace = 0;
+                float Lod = min(_LOD_scale * _OceanLength / viewDist,1);
+                displace = tex2Dlod(_Displace,worldUV / _OceanLength) * Lod;
                 v.vertex += float4(displace.xyz,0);
                 o.vertex = UnityObjectToClipPos(v.vertex);
 

@@ -1,24 +1,18 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using UnityEngine;
-using System;
-public class FFTOcean : MonoBehaviour
+[Serializable]
+public class WindData
 {
-    // 网格生成
-    private Mesh mesh;
-    private MeshFilter filter;
-    private MeshRenderer render;
-    public int meshSize = 100;              // 网格大小，每行/列的顶点数
+    public Vector2 windDir;
+    public float windSpeed;
+}
+public class OceanCompute
+{
     public int OceanLength = 512;           // 海平面大小，对应Lx与Lz(方形海域Lx=Lz)
     public int FFTPow = 9;                  // 频域坐标采样点数量（2的指数幂）
     private int fftSize;                    // pow(2,FFTPow)，对应N,M (N=M)
-    
-    private int[] vertIndex;        // 网格三角形索引
-    private Vector3[] position;     // 网格顶点位置
-    private Vector2[] uv;           // 顶点uv坐标
-    private Vector3[] normal;       // 顶点法向量
 
     // 材质
     public Material oceanMaterial;                  // 海洋材质
@@ -48,15 +42,10 @@ public class FFTOcean : MonoBehaviour
     public ComputeShader ComputeWithTimeCs;         // 计算随时间变换的频谱和纹理的 compute shader
 
     [Range(-1.0f, 1.0f)]
-    public float lambda = 1.0f;                            // 偏移系数
+    public float lambda = 1.0f;                     // 偏移系数
     public List<WindData> windData;                 // 风信息
-    //public Vector2 windDir;                         // 风向
-    //public float windSpeed;                         // 风速
     public float waveA;                             // 菲利普参数，影响波浪高度
     public float depth;                             // 水深
-    public float timeScale;                         // 时间系数
-
-    private float time = 0;                         // 时间
 
     // KernelID
     private int kernelInitH0;                           // 重置H0
@@ -65,11 +54,28 @@ public class FFTOcean : MonoBehaviour
     private int kernelCreateRenderTextureWithTime;      // 生成每帧的纹理
     private int kernelComputeFFTH;                      // 横向FFT运算
     private int kernelComputeFFTV;                      // 纵向FFT运算
-
-    public FFTOcean(Material _OceanMaterial, Material _DisplaceMat,Material _NormalMat, Material _DebugMat,
-                    ComputeShader _OceanCs,ComputeShader _InitSpectrumCs, ComputeShader _ComputeFFTCs, ComputeShader _ComputeWithTimeCs,
-                    float _lambda, List<WindData> _windData, float _WaveA, float _depth, float _timeScale)
+    /// <summary>
+    /// 构造函数
+    /// </summary>
+    /// <param name="_OceanMaterial"></param>
+    /// <param name="_DisplaceMat"></param>
+    /// <param name="_NormalMat"></param>
+    /// <param name="_DebugMat"></param>
+    /// <param name="_OceanCs"></param>
+    /// <param name="_InitSpectrumCs"></param>
+    /// <param name="_ComputeFFTCs"></param>
+    /// <param name="_ComputeWithTimeCs"></param>
+    /// <param name="_lambda"></param>
+    /// <param name="_windData"></param>
+    /// <param name="_WaveA"></param>
+    /// <param name="_depth"></param>
+    /// <param name="_timeScale"></param>
+    public OceanCompute(int _OceanSize,int _FFTPow, Material _OceanMaterial, Material _DisplaceMat, Material _NormalMat, Material _DebugMat,
+                    ComputeShader _OceanCs, ComputeShader _InitSpectrumCs, ComputeShader _ComputeFFTCs, ComputeShader _ComputeWithTimeCs,
+                    float _lambda, List<WindData> _windData, float _WaveA, float _depth)
     {
+        OceanLength = _OceanSize;
+        FFTPow = _FFTPow;
         oceanMaterial = _OceanMaterial;
         DisplaceMat = _DisplaceMat;
         NormalMat = _NormalMat;
@@ -82,39 +88,14 @@ public class FFTOcean : MonoBehaviour
         windData = _windData;
         waveA = _WaveA;
         depth = _depth;
-        timeScale = _timeScale;
-    }
-    private void Awake()
-    {
-        mesh = new Mesh();
-        filter = gameObject.GetComponent<MeshFilter>();
-        if (filter == null)
-        {
-            filter = gameObject.AddComponent<MeshFilter>();
-        }
-        render = gameObject.GetComponent<MeshRenderer>();
-        if (render == null)
-        {
-            render = gameObject.AddComponent<MeshRenderer>();
-        }
-        filter.mesh = mesh;
-        render.material = oceanMaterial;
-    }
 
-    void Start()
-    {
         fftSize = (int)Mathf.Pow(2, FFTPow);
-        CreateMesh();
+
         InitialComputeShaderValue();
     }
 
-    void Update()
-    {
-        time += Time.deltaTime * timeScale;
-        CreateComputeShaderValue();
-    }
     /// <summary>
-    /// 初始化computer Shader相关数据值
+    /// 初始化computer Shader相关RT,ComputeCs, kernelID
     /// </summary>
     private void InitialComputeShaderValue()
     {
@@ -153,72 +134,11 @@ public class FFTOcean : MonoBehaviour
         kernelCreateSpectrumWithTime = ComputeWithTimeCs.FindKernel("CreateSpectrumWithTime");
         kernelCreateRenderTextureWithTime = ComputeWithTimeCs.FindKernel("CreateRenderTextureWithTime");
 
-        // 得到高斯噪声纹理和蝶形运算纹理
-        GetNoiseAndButterFlyTexture();
-
-    }
-    /// <summary>
-    /// 计算每帧的频谱和纹理
-    /// </summary>
-    private void CreateComputeShaderValue()
-    {
-        // 得到频谱
-        GetInitSpectrum();
-        GetSpectrum();
-        // FFT
-        FastFourierTransform();
-        // 生成并设置纹理
-        SetMaterialTexture();
-        SetDebugTexture();
-    }
-    /// <summary>
-    /// 创建海面网格
-    /// </summary>
-    private void CreateMesh()
-    {
-        vertIndex = new int[(meshSize - 1) * (meshSize - 1) * 6];
-        position = new Vector3[meshSize * meshSize];
-        uv = new Vector2[meshSize * meshSize];
-        normal = new Vector3[meshSize * meshSize];
-        if (meshSize == 1)
-        {
-            position[0] = new Vector3(0, 0, 0);
-            uv[0] = new Vector2(0, 0);
-            normal[0] = new Vector3(0, 1, 0);
-        }
-        else
-        {
-            int count = 0;
-            for (int i = 0; i < meshSize; i++)
-            {
-                for (int j = 0; j < meshSize; j++)
-                {
-                    int index = i * meshSize + j;
-                    position[index] = new Vector3((j - meshSize / 2.0f) * OceanLength / meshSize, 0, (i - meshSize / 2.0f) * OceanLength / meshSize);
-                    uv[index] = new Vector2(j / (meshSize - 1.0f), i / (meshSize - 1.0f));
-                    normal[index] = new Vector3(0, 1, 0);
-                    if (i != meshSize - 1 && j != meshSize - 1)
-                    {
-                        vertIndex[count++] = index;
-                        vertIndex[count++] = index + meshSize;
-                        vertIndex[count++] = index + meshSize + 1;
-
-                        vertIndex[count++] = index;
-                        vertIndex[count++] = index + meshSize + 1;
-                        vertIndex[count++] = index + 1;
-                    }
-                }
-            }
-        }
-        mesh.vertices = position;
-        mesh.SetIndices(vertIndex, MeshTopology.Triangles, 0);
-        mesh.uv = uv;
-        mesh.normals = normal;
     }
     /// <summary>
     /// 得到高斯噪声纹理和蝶形运算纹理
     /// </summary>
-    private void GetNoiseAndButterFlyTexture()
+    public void GetNoiseAndButterFlyTexture()
     {
         string Gaussianfilename = "GaussianNoiseTexture" + fftSize.ToString() + "x" + fftSize.ToString();
         string Butterflyfilename = "ButterflyTexture" + fftSize.ToString() + "x" + fftSize.ToString();
@@ -238,15 +158,15 @@ public class FFTOcean : MonoBehaviour
     private Texture2D CreateGaussianNoiseRT()
     {
         Texture2D GaussianNoise = new Texture2D(fftSize, fftSize, TextureFormat.RGBAFloat, false, true);
-        for (int i = 0;i < fftSize; i++)
+        for (int i = 0; i < fftSize; i++)
         {
-            for(int j = 0; j < fftSize; j++)
+            for (int j = 0; j < fftSize; j++)
             {
                 GaussianNoise.SetPixel(i, j, new Vector4(GaussianRandom(), GaussianRandom(), GaussianRandom(), GaussianRandom()));
             }
         }
         GaussianNoise.Apply();
-        SaveIntoFile("GaussianNoise",GaussianNoise);
+        SaveIntoFile("GaussianNoise", GaussianNoise);
         return GaussianNoise;
     }
     /// <summary>
@@ -254,7 +174,7 @@ public class FFTOcean : MonoBehaviour
     /// </summary>
     private Texture2D CreateButterflyRT()
     {
-        Texture2D Butterfly = new Texture2D(fftSize , FFTPow, TextureFormat.RGBAFloat, false, true);
+        Texture2D Butterfly = new Texture2D(fftSize, FFTPow, TextureFormat.RGBAFloat, false, true);
         for (int i = 0; i < FFTPow; i++)
         {
             int nBlocks = (int)Mathf.Pow(2, FFTPow - i - 1);  // 块
@@ -311,7 +231,7 @@ public class FFTOcean : MonoBehaviour
     /// <summary>
     /// 生成初始频谱
     /// </summary>
-    private void GetInitSpectrum()
+    public void GetInitSpectrum()
     {
         // 创建初始频谱
         InitSpectrumCs.SetInt("fftSize", fftSize);
@@ -343,9 +263,9 @@ public class FFTOcean : MonoBehaviour
     /// <summary>
     ///  生成每帧的高度,梯度，偏移频谱
     /// </summary>
-    private void GetSpectrum()
+    public void GetSpectrum(float time)
     {
-        ComputeWithTimeCs.SetFloat("time",time);
+        ComputeWithTimeCs.SetFloat("time", time);
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "HeightSpectrumRT", HeightSpectrumRT);
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "DisplacementSpectrumRT", DisplacementSpectrumRT);
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "GradientSpectrumRT", GradientSpectrumRT);
@@ -353,16 +273,15 @@ public class FFTOcean : MonoBehaviour
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "Dzdx_Dzdz", Dzdx_Dzdz);
         ComputeWithTimeCs.Dispatch(kernelCreateSpectrumWithTime, fftSize / 8, fftSize / 8, 1);
     }
-
     /// <summary>
     /// FFT变换
     /// </summary>
-    private void FastFourierTransform()
+    public void FastFourierTransform()
     {
         ComputeFFTCs.SetInt("fftSize", fftSize);
         int isEnd = 1;
         // 横向运算
-        for (int i = 0; i< FFTPow; i++)
+        for (int i = 0; i < FFTPow; i++)
         {
             ComputeFFTCs.SetInt("stage", i);
             isEnd = i == FFTPow - 1 ? 1 : 0;
@@ -409,14 +328,14 @@ public class FFTOcean : MonoBehaviour
     /// <summary>
     /// 设置渲染纹理
     /// </summary>
-    private void SetMaterialTexture()
+    public void SetMaterialTexture()
     {
         float divideOceanL = OceanLength == 0 ? 0 : 1.0f / (float)OceanLength;
         ComputeWithTimeCs.SetFloat("divideOceanL", divideOceanL);
         ComputeWithTimeCs.SetFloat("lambda", lambda);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "WaveData", WaveData);
-        ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime,"HeightSpectrumRT", HeightSpectrumRT);
-        ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime,"DisplacementSpectrumRT", DisplacementSpectrumRT);
+        ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "HeightSpectrumRT", HeightSpectrumRT);
+        ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "DisplacementSpectrumRT", DisplacementSpectrumRT);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "GradientSpectrumRT", GradientSpectrumRT);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "Dxdx_Dxdz", Dxdx_Dxdz);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "Dzdx_Dzdz", Dzdx_Dzdz);
@@ -425,6 +344,9 @@ public class FFTOcean : MonoBehaviour
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "ChoppyWavesRT", ChoppyWavesRT);
         ComputeWithTimeCs.Dispatch(kernelCreateRenderTextureWithTime, fftSize / 8, fftSize / 8, fftSize / 8);
 
+        DisplaceRT.wrapMode = TextureWrapMode.Repeat;
+        NormalRT.wrapMode = TextureWrapMode.Repeat;
+        ChoppyWavesRT.wrapMode = TextureWrapMode.Repeat;
         oceanMaterial.SetTexture("_Displace", DisplaceRT);
         oceanMaterial.SetTexture("_Normal", NormalRT);
         oceanMaterial.SetTexture("_ChoppyWavesRT", ChoppyWavesRT);
@@ -468,16 +390,5 @@ public class FFTOcean : MonoBehaviour
             M /= 2;
         }
         return Sum;
-    }
-    /// <summary>
-    /// 计算海洋并渲染
-    /// </summary>
-    public void ComputeOcean()
-    {
-        fftSize = (int)Mathf.Pow(2, FFTPow);
-        InitialComputeShaderValue();
-        time += Time.deltaTime * timeScale;
-        CreateComputeShaderValue();
-
     }
 }

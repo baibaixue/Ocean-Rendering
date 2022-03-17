@@ -133,7 +133,7 @@ Material:
     - _FoamBiasLOD1: 1
     - _FoamBiasLOD2: 1
     - _FoamScale: 1
-    - _FresnelScale: 0.05
+    - _FresnelScale: 0.1
     - _Gloss: 256
     - _GlossMapScale: 1
     - _Glossiness: 0.481
@@ -143,6 +143,7 @@ Material:
     - _Metallic: 1
     - _Mode: 0
     - _OcclusionStrength: 1
+    - _OceanLength: 512
     - _Parallax: 0.02
     - _Roughness: 0
     - _RoughnessScale: 0.1
