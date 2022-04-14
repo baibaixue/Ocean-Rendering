@@ -35,6 +35,18 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ChoppyWavesRT0:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ChoppyWavesRT1:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ChoppyWavesRT2:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _Cubemap:
         m_Texture: {fileID: 8900000, guid: 563c07001d6ac4e47a0d4f593ef730a7, type: 2}
         m_Scale: {x: 1, y: 1}
@@ -67,6 +79,18 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Displace0:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Displace1:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Displace2:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _Displacement_c0:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -96,6 +120,18 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Normal:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Normal0:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Normal1:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Normal2:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -133,17 +169,17 @@ Material:
     - _FoamBiasLOD1: 1
     - _FoamBiasLOD2: 1
     - _FoamScale: 1
-    - _FresnelScale: 0.1
+    - _FresnelScale: 0.059
     - _Gloss: 256
     - _GlossMapScale: 1
     - _Glossiness: 0.481
     - _GlossyReflections: 1
-    - _LOD_scale: 0
+    - _LOD_scale: 1.9
     - _MaxGloss: 0
     - _Metallic: 1
     - _Mode: 0
     - _OcclusionStrength: 1
-    - _OceanLength: 512
+    - _OceanLength: 20
     - _Parallax: 0.02
     - _Roughness: 0
     - _RoughnessScale: 0.1
@@ -158,7 +194,7 @@ Material:
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
-    - _foamScale: 0.552
+    - _foamScale: 0.076
     m_Colors:
     - _Amplitude: {r: 1, g: 1, b: 1, a: 1}
     - _BubblesColor: {r: 0.3798505, g: 0.8181261, b: 0.8301887, a: 1}

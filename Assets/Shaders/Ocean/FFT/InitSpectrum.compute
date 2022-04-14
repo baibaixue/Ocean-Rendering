@@ -12,7 +12,9 @@ Texture2D<float4> Noise;	// 高斯随机数纹理
 float2 WindDir;				// 风向
 float WindSpeed;			// 风速
 float Wave_A;				// 波浪的振幅
-
+// 频谱范围
+float cutoffLow;			
+float cutoffHigh;
 // 输出结果
 RWTexture2D<float4> WaveData;	// 用于计算的波数据 float4(kx,kz,1/|k|,omega(k))
 RWTexture2D<float4> H0;	
@@ -46,13 +48,17 @@ float OmegaK(float k)
 void InitPhillipsSpectrum(uint3 id: SV_DispatchthreadID)
 {
 	float2 k = WaveData[id.xy].xy;
-	
+	float k_length = length(k);
+	k_length = max(0.0000001f,k_length);
+
 	float2 h0 = Noise[id.xy].xy * sqrt(Phillips(k) / 2);
 	float2 h0Conj = Noise[id.xy].xy * sqrt(Phillips(-k) / 2);
 	h0Conj.y *= -1;
-
-	H0[id.xy] = H0[id.xy] + float4(h0,0,0);
-	H0Conj[id.xy] = H0Conj[id.xy] + float4(h0Conj,0,0);
+	if (k_length <= cutoffHigh && k_length >= cutoffLow)
+	{
+		H0[id.xy] = H0[id.xy] + float4(h0,0,0);
+		H0Conj[id.xy] = H0Conj[id.xy] + float4(h0Conj,0,0);
+	}
 }
 
 [numthreads(8,8,1)]

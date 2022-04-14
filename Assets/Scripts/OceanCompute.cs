@@ -47,6 +47,8 @@ public class OceanCompute
     public float waveA;                             // 菲利普参数，影响波浪高度
     public float depth;                             // 水深
 
+    float cutoffLow;                                  // 频谱边界
+    float cutoffHigh;                                // 频谱边界
     // KernelID
     private int kernelInitH0;                           // 重置H0
     private int kernelInitPhillipsSpectrum;             // 生成初始频谱
@@ -72,7 +74,7 @@ public class OceanCompute
     /// <param name="_timeScale"></param>
     public OceanCompute(int _OceanSize,int _FFTPow, Material _OceanMaterial, Material _DisplaceMat, Material _NormalMat, Material _DebugMat,
                     ComputeShader _OceanCs, ComputeShader _InitSpectrumCs, ComputeShader _ComputeFFTCs, ComputeShader _ComputeWithTimeCs,
-                    float _lambda, List<WindData> _windData, float _WaveA, float _depth)
+                    float _lambda, List<WindData> _windData, float _WaveA, float _depth, float _cutoffLow, float _cutoffHigh)
     {
         OceanLength = _OceanSize;
         FFTPow = _FFTPow;
@@ -88,6 +90,9 @@ public class OceanCompute
         windData = _windData;
         waveA = _WaveA;
         depth = _depth;
+
+        cutoffLow = _cutoffLow;
+        cutoffHigh = _cutoffHigh;
 
         fftSize = (int)Mathf.Pow(2, FFTPow);
 
@@ -238,6 +243,8 @@ public class OceanCompute
         InitSpectrumCs.SetInt("OceanLength", OceanLength);
         InitSpectrumCs.SetFloat("Depth", depth);
         InitSpectrumCs.SetFloat("Wave_A", waveA);
+        InitSpectrumCs.SetFloat("cutoffLow", cutoffLow);
+        InitSpectrumCs.SetFloat("cutoffHigh", cutoffHigh);
 
         InitSpectrumCs.SetTexture(kernelInitH0, "WaveData", WaveData);
         InitSpectrumCs.SetTexture(kernelInitH0, "H0", H0);
@@ -254,17 +261,22 @@ public class OceanCompute
             InitSpectrumCs.SetTexture(kernelInitPhillipsSpectrum, "H0Conj", H0Conj);
             InitSpectrumCs.Dispatch(kernelInitPhillipsSpectrum, fftSize / 8, fftSize / 8, 1);
         }
-
+        /*
         // 设置初始频谱
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "H0", H0);
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "H0Conj", H0Conj);
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "WaveData", WaveData);
+        */
     }
     /// <summary>
     ///  生成每帧的高度,梯度，偏移频谱
     /// </summary>
     public void GetSpectrum(float time)
     {
+        // 设置初始频谱
+        ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "H0", H0);
+        ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "H0Conj", H0Conj);
+        ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "WaveData", WaveData);
         ComputeWithTimeCs.SetFloat("time", time);
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "HeightSpectrumRT", HeightSpectrumRT);
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "DisplacementSpectrumRT", DisplacementSpectrumRT);
@@ -328,7 +340,7 @@ public class OceanCompute
     /// <summary>
     /// 设置渲染纹理
     /// </summary>
-    public void SetMaterialTexture()
+    public void SetMaterialTexture(int id)
     {
         float divideOceanL = OceanLength == 0 ? 0 : 1.0f / (float)OceanLength;
         ComputeWithTimeCs.SetFloat("divideOceanL", divideOceanL);
@@ -347,14 +359,14 @@ public class OceanCompute
         DisplaceRT.wrapMode = TextureWrapMode.Repeat;
         NormalRT.wrapMode = TextureWrapMode.Repeat;
         ChoppyWavesRT.wrapMode = TextureWrapMode.Repeat;
-        oceanMaterial.SetTexture("_Displace", DisplaceRT);
-        oceanMaterial.SetTexture("_Normal", NormalRT);
-        oceanMaterial.SetTexture("_ChoppyWavesRT", ChoppyWavesRT);
-        oceanMaterial.SetFloat("_OceanLength", OceanLength);
+        oceanMaterial.SetTexture("_Displace" + id.ToString(), DisplaceRT);
+        oceanMaterial.SetTexture("_Normal" + id.ToString(), NormalRT);
+        oceanMaterial.SetTexture("_ChoppyWavesRT" + id.ToString(), ChoppyWavesRT);
+        oceanMaterial.SetFloat("OceanLength" + id.ToString(), OceanLength);
         //NormalMat.SetTexture("_MainTex", HeightSpectrumRT);
-        DisplaceMat.SetTexture("_MainTex", DisplaceRT);
+        //DisplaceMat.SetTexture("_MainTex", DisplaceRT);
         //NormalMat.SetTexture("_MainTex", DeviationZSpectrumRT);
-        NormalMat.SetTexture("_MainTex", NormalRT);
+        //NormalMat.SetTexture("_MainTex", NormalRT);
     }
 
     /// <summary>
