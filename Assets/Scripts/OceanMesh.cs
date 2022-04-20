@@ -61,7 +61,6 @@ public class OceanMesh : MonoBehaviour
             MeshRenderer = meshRemderer;
         }
     }
-    List<MeshElement> meshElements = new List<MeshElement>();
     List<MeshElement> rings = new List<MeshElement>();  // 环状网格
     List<MeshElement> trims = new List<MeshElement>();  // 不同网格对象的接缝处
     MeshElement center;     // 中心网格
@@ -113,7 +112,6 @@ public class OceanMesh : MonoBehaviour
         // 初始化海洋相关数据
         InitOceanData();
 
-        UpdateMeshPosition();
     }
     /// <summary>
     /// 初始化海洋相关数据
@@ -152,7 +150,6 @@ public class OceanMesh : MonoBehaviour
         {
             if (child != transform) Destroy(child.gameObject);
         }
-        //meshElements.Clear();
         rings.Clear();
         trims.Clear();
 
@@ -174,6 +171,7 @@ public class OceanMesh : MonoBehaviour
             rings.Add(InstanceElement("Ring" + i.ToString(), ring, OceanMaterial));
             trims.Add(InstanceElement("Trim" + i.ToString(), trim, OceanMaterial));
         }
+        UpdateMeshPosition();
     }
     /*
     void CreateMesh()
@@ -442,7 +440,7 @@ public class OceanMesh : MonoBehaviour
         oceanCompute2.FastFourierTransform();
         oceanCompute2.SetMaterialTexture(2);
         
-        //UpdateMaterial();
+        UpdateMaterial();
     }
     /// <summary>
     /// 材质更新
@@ -460,16 +458,25 @@ public class OceanMesh : MonoBehaviour
         materials[2].DisableKeyword("MID");
         materials[2].DisableKeyword("CLOSE");
 
-        for(int i=0;i<=SimplifyLevel;i++)
+        center.MeshRenderer.material = GetMaterial(-1);
+        for(int i = 0; i < SimplifyLevel; i++)
         {
-            if (i < SimplifyLevel / 3)
-                meshElements[i].MeshRenderer.material = materials[0];
-            else if (i <= SimplifyLevel / 3 * 2)
-                meshElements[i].MeshRenderer.material = materials[1];
-            else
-            meshElements[i].MeshRenderer.material = materials[2];
-
+            rings[i].MeshRenderer.material = GetMaterial(i);
+            trims[i].MeshRenderer.material = GetMaterial(i);
         }
+    }
+    /// <summary>
+    /// 根据层级决定材质
+    /// </summary>
+    /// <param name="level">网格层级</param>
+    /// <returns></returns>
+    Material GetMaterial(int level)
+    {
+        if (level - 2 <= 0)
+            return materials[0];
+        else if (level - 2 <= 2)
+            return materials[1];
+        return materials[2];
     }
     /// <summary>
     /// 更新网格位置

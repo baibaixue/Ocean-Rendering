@@ -24,16 +24,18 @@ public class OceanCompute
     private Texture2D ButterflyRT;                  // 蝶形运算纹理
     private RenderTexture WaveData;                 // 记录中间用于计算的波数据
     private RenderTexture DisplaceRT;               // 偏移纹理
-    private RenderTexture NormalRT;                 // 法线纹理
+    //private RenderTexture NormalRT;                 // 法线纹理
+    private RenderTexture DerivativesRT;            // 导数纹理
     private RenderTexture ChoppyWavesRT;            // 尖浪纹理（白沫）
     // 频谱数据
     private RenderTexture H0;                       // 初始频谱 h0
     private RenderTexture H0Conj;                   // 初始频谱的共轭复数 h0Conj
     private RenderTexture HeightSpectrumRT;         // 高度频谱
     private RenderTexture DisplacementSpectrumRT;   // 偏移频谱
-    private RenderTexture GradientSpectrumRT;       // 梯度频谱
+    //private RenderTexture GradientSpectrumRT;       // 梯度频谱
     private RenderTexture Dxdx_Dxdz;                // DisplacementSpectrumRT.x 关于x,z分别求偏导
     private RenderTexture Dzdx_Dzdz;                // DisplacementSpectrumRT.z 关于x,z分别求偏导
+    private RenderTexture Dydx_Dydz;
     private RenderTexture TempRT;                   // 临时存储中间过程
     // 海洋参数
     public ComputeShader OceanCs;                   // 计算海洋的compute shader
@@ -111,11 +113,13 @@ public class OceanCompute
             H0Conj.Release();
             HeightSpectrumRT.Release();
             DisplacementSpectrumRT.Release();
-            GradientSpectrumRT.Release();
+            //GradientSpectrumRT.Release();
             Dxdx_Dxdz.Release();
             Dzdx_Dzdz.Release();
+            Dydx_Dydz.Release();
             TempRT.Release();
-            NormalRT.Release();
+            //NormalRT.Release();
+            DerivativesRT.Release();
             DisplaceRT.Release();
             ChoppyWavesRT.Release();
         }
@@ -124,11 +128,13 @@ public class OceanCompute
         H0Conj = CreateRenderTexture(fftSize);
         HeightSpectrumRT = CreateRenderTexture(fftSize);
         DisplacementSpectrumRT = CreateRenderTexture(fftSize);
-        GradientSpectrumRT = CreateRenderTexture(fftSize);
+        //GradientSpectrumRT = CreateRenderTexture(fftSize);
         Dxdx_Dxdz = CreateRenderTexture(fftSize);
         Dzdx_Dzdz = CreateRenderTexture(fftSize);
+        Dydx_Dydz = CreateRenderTexture(fftSize);
         TempRT = CreateRenderTexture(fftSize);
-        NormalRT = CreateRenderTexture(fftSize);
+        //NormalRT = CreateRenderTexture(fftSize);
+        DerivativesRT = CreateRenderTexture(fftSize);
         DisplaceRT = CreateRenderTexture(fftSize);
         ChoppyWavesRT = CreateRenderTexture(fftSize);
         // kernelID
@@ -280,9 +286,10 @@ public class OceanCompute
         ComputeWithTimeCs.SetFloat("time", time);
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "HeightSpectrumRT", HeightSpectrumRT);
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "DisplacementSpectrumRT", DisplacementSpectrumRT);
-        ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "GradientSpectrumRT", GradientSpectrumRT);
+        //ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "GradientSpectrumRT", GradientSpectrumRT);
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "Dxdx_Dxdz", Dxdx_Dxdz);
         ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "Dzdx_Dzdz", Dzdx_Dzdz);
+        ComputeWithTimeCs.SetTexture(kernelCreateSpectrumWithTime, "Dydx_Dydz", Dydx_Dydz);
         ComputeWithTimeCs.Dispatch(kernelCreateSpectrumWithTime, fftSize / 8, fftSize / 8, 1);
     }
     /// <summary>
@@ -300,9 +307,10 @@ public class OceanCompute
             ComputeFFTCs.SetInt("isEnd", isEnd);
             ComputeFFT(kernelComputeFFTH, ref HeightSpectrumRT);
             ComputeFFT(kernelComputeFFTH, ref DisplacementSpectrumRT);
-            ComputeFFT(kernelComputeFFTH, ref GradientSpectrumRT);
+            //ComputeFFT(kernelComputeFFTH, ref GradientSpectrumRT);
             ComputeFFT(kernelComputeFFTH, ref Dxdx_Dxdz);
             ComputeFFT(kernelComputeFFTH, ref Dzdx_Dzdz);
+            ComputeFFT(kernelComputeFFTH, ref Dydx_Dydz);
         }
         // 纵向运算
         for (int i = 0; i < FFTPow; i++)
@@ -312,9 +320,10 @@ public class OceanCompute
             ComputeFFTCs.SetInt("isEnd", isEnd);
             ComputeFFT(kernelComputeFFTV, ref HeightSpectrumRT);
             ComputeFFT(kernelComputeFFTV, ref DisplacementSpectrumRT);
-            ComputeFFT(kernelComputeFFTV, ref GradientSpectrumRT);
+            //ComputeFFT(kernelComputeFFTV, ref GradientSpectrumRT);
             ComputeFFT(kernelComputeFFTV, ref Dxdx_Dxdz);
             ComputeFFT(kernelComputeFFTV, ref Dzdx_Dzdz);
+            ComputeFFT(kernelComputeFFTV, ref Dydx_Dydz);
         }
     }
     private void ComputeFFT(int kernelID, ref RenderTexture input)
@@ -348,19 +357,23 @@ public class OceanCompute
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "WaveData", WaveData);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "HeightSpectrumRT", HeightSpectrumRT);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "DisplacementSpectrumRT", DisplacementSpectrumRT);
-        ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "GradientSpectrumRT", GradientSpectrumRT);
+        //ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "GradientSpectrumRT", GradientSpectrumRT);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "Dxdx_Dxdz", Dxdx_Dxdz);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "Dzdx_Dzdz", Dzdx_Dzdz);
-        ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "NormalRT", NormalRT);
+        ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "Dydx_Dydz", Dydx_Dydz);
+        //ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "NormalRT", NormalRT);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "DisplaceRT", DisplaceRT);
         ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "ChoppyWavesRT", ChoppyWavesRT);
+        ComputeWithTimeCs.SetTexture(kernelCreateRenderTextureWithTime, "DerivativesRT", DerivativesRT);
         ComputeWithTimeCs.Dispatch(kernelCreateRenderTextureWithTime, fftSize / 8, fftSize / 8, fftSize / 8);
 
         DisplaceRT.wrapMode = TextureWrapMode.Repeat;
-        NormalRT.wrapMode = TextureWrapMode.Repeat;
+        //NormalRT.wrapMode = TextureWrapMode.Repeat;
+        DerivativesRT.wrapMode = TextureWrapMode.Repeat;
         ChoppyWavesRT.wrapMode = TextureWrapMode.Repeat;
         oceanMaterial.SetTexture("_Displace" + id.ToString(), DisplaceRT);
-        oceanMaterial.SetTexture("_Normal" + id.ToString(), NormalRT);
+        //oceanMaterial.SetTexture("_Normal" + id.ToString(), NormalRT);
+        oceanMaterial.SetTexture("_Derivatives" + id.ToString(), DerivativesRT);
         oceanMaterial.SetTexture("_ChoppyWavesRT" + id.ToString(), ChoppyWavesRT);
         oceanMaterial.SetFloat("OceanLength" + id.ToString(), OceanLength);
         //NormalMat.SetTexture("_MainTex", HeightSpectrumRT);

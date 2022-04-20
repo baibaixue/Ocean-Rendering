@@ -51,6 +51,18 @@ Material:
         m_Texture: {fileID: 8900000, guid: 563c07001d6ac4e47a0d4f593ef730a7, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Derivatives0:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Derivatives1:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Derivatives2:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _Derivatives_c0:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -108,7 +120,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _FoamTexture:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 9cce65b7897b5ac4eb17a0b2fc34b728, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -161,40 +173,45 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _BumpScale: 1
-    - _ContactFoam: 1
+    - _ContactFoam: 0.614
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _FoamBiasLOD0: 1
-    - _FoamBiasLOD1: 1
-    - _FoamBiasLOD2: 1
-    - _FoamScale: 1
-    - _FresnelScale: 0.059
-    - _Gloss: 256
+    - _FoamBias: 5.65
+    - _FoamBiasLOD0: 1.4
+    - _FoamBiasLOD1: 3.7
+    - _FoamBiasLOD2: 3.5
+    - _FoamRange: 2.3
+    - _FoamRangeLOD0: 1
+    - _FoamRangeLOD1: 1.5
+    - _FoamRangeLOD2: 2.5
+    - _FoamScale: 1.14
+    - _FresnelScale: 0.203
+    - _Gloss: 183
     - _GlossMapScale: 1
     - _Glossiness: 0.481
     - _GlossyReflections: 1
-    - _LOD_scale: 1.9
-    - _MaxGloss: 0
+    - _LOD_scale: 4.25
+    - _MaxGloss: 0.195
     - _Metallic: 1
     - _Mode: 0
     - _OcclusionStrength: 1
     - _OceanLength: 20
     - _Parallax: 0.02
-    - _Roughness: 0
-    - _RoughnessScale: 0.1
-    - _SSSBase: 0
-    - _SSSDistortion: 1
-    - _SSSPow: 0.763
-    - _SSSScale: 0.91
-    - _SSSStrength: 0.313
+    - _Roughness: 0.449
+    - _RoughnessScale: 0.00352
+    - _SSSBase: -3.82
+    - _SSSDistortion: 0.833
+    - _SSSPow: 4.98
+    - _SSSScale: 10.7
+    - _SSSStrength: 0.348
     - _Sharpness: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
-    - _foamScale: 0.076
+    - _foamScale: 0
     m_Colors:
     - _Amplitude: {r: 1, g: 1, b: 1, a: 1}
     - _BubblesColor: {r: 0.3798505, g: 0.8181261, b: 0.8301887, a: 1}

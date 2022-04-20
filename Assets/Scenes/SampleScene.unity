@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: 16cb3826b382d9d4495c91920e454e41, type: 2}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 9b7ca251e8646c54db0a77ae2021bf9b, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 170076734}
-  m_IndirectSpecularColor: {r: 0.68020654, g: 0.7734218, b: 0.8503601, a: 1}
+  m_IndirectSpecularColor: {r: 0.4649657, g: 0.25613186, b: 0.19841713, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -185,8 +185,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 8
   m_Type: 1
-  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  m_Intensity: 1
+  m_Color: {r: 1, g: 0.58431375, b: 0.24705884, a: 1}
+  m_Intensity: 2
   m_Range: 10
   m_SpotAngle: 30
   m_CookieSize: 10
@@ -220,13 +220,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 170076733}
-  m_LocalRotation: {x: 0.42261827, y: 0, z: 0, w: 0.9063079}
-  m_LocalPosition: {x: 0, y: 3, z: 0}
+  m_LocalRotation: {x: 0, y: 0.76604444, z: 0, w: 0.64278764}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 50, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 100, z: 0}
 --- !u!1 &184732103
 GameObject:
   m_ObjectHideFlags: 0
@@ -439,7 +439,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 10000
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -465,13 +465,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 534669902}
-  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 450, z: 0}
+  m_LocalRotation: {x: 0, y: 0.8660254, z: -0, w: -0.5}
+  m_LocalPosition: {x: 0, y: 50, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 240, z: 0}
 --- !u!114 &534669906
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -479,7 +479,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 534669902}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fa1c38cc96e004944b22c531fe333f7c, type: 3}
   m_Name: 
@@ -619,7 +619,7 @@ GameObject:
   - component: {fileID: 1113312039}
   - component: {fileID: 1113312038}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: Ocean
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -637,12 +637,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83069eef03bfc204394c32056e9e860f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GridDensity: 25
-  OceanSize: 256
-  WaveSize_0: 5
-  WaveSize_1: 5
-  WaveSize_2: 5
-  SimplifyLevel: 3
+  GridDensity: 20
+  OceanSize: 300
+  WaveSize_0: 400
+  WaveSize_1: 100
+  WaveSize_2: 40
+  SimplifyLevel: 7
   OceanMaterial: {fileID: 2100000, guid: 23ee723ac1a521848a8eaebdec7b7d6b, type: 2}
   FFTPow: 7
   DisplaceMat: {fileID: 2100000, guid: b3b9ce49680615a49bd6136228a04e12, type: 2}
@@ -652,13 +652,15 @@ MonoBehaviour:
   InitSpectrumCs: {fileID: 7200000, guid: 281fb396bfa98c545af94af7f9f24a65, type: 3}
   ComputeFFTCs: {fileID: 7200000, guid: 61fe4383f297e784a8da0e51b5b21690, type: 3}
   ComputeWithTimeCs: {fileID: 7200000, guid: 338d8189431b8db41ae11ea3dfd55163, type: 3}
-  lambda: -0.88
+  lambda: -1
   windData:
   - windDir: {x: 1, y: 1}
     windSpeed: 20
+  - windDir: {x: -1, y: 1}
+    windSpeed: 20
   waveA: 0.4
   depth: 400
-  timeScale: 1
+  timeScale: 3
 --- !u!4 &1113312039
 Transform:
   m_ObjectHideFlags: 0
