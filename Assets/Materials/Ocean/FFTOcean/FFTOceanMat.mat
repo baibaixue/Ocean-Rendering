@@ -48,7 +48,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Cubemap:
-        m_Texture: {fileID: 8900000, guid: 563c07001d6ac4e47a0d4f593ef730a7, type: 2}
+        m_Texture: {fileID: 8900000, guid: 7f5779140d6e64f44a7940b41f49ba81, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Derivatives0:
@@ -120,7 +120,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _FoamTexture:
-        m_Texture: {fileID: 2800000, guid: 9cce65b7897b5ac4eb17a0b2fc34b728, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -182,29 +182,31 @@ Material:
     - _FoamBiasLOD1: 3.7
     - _FoamBiasLOD2: 3.5
     - _FoamRange: 2.3
-    - _FoamRangeLOD0: 1
-    - _FoamRangeLOD1: 1.5
-    - _FoamRangeLOD2: 2.5
-    - _FoamScale: 1.14
-    - _FresnelScale: 0.203
+    - _FoamRangeLOD0: 1.19
+    - _FoamRangeLOD1: 1.38
+    - _FoamRangeLOD2: 2.6
+    - _FoamScale: 3.1
+    - _FresnelScale: 0.24
     - _Gloss: 183
     - _GlossMapScale: 1
     - _Glossiness: 0.481
     - _GlossyReflections: 1
-    - _LOD_scale: 4.25
-    - _MaxGloss: 0.195
+    - _LOD_scale: 1
+    - _MaxGloss: 10
     - _Metallic: 1
     - _Mode: 0
     - _OcclusionStrength: 1
     - _OceanLength: 20
     - _Parallax: 0.02
-    - _Roughness: 0.449
-    - _RoughnessScale: 0.00352
-    - _SSSBase: -3.82
-    - _SSSDistortion: 0.833
-    - _SSSPow: 4.98
-    - _SSSScale: 10.7
-    - _SSSStrength: 0.348
+    - _Roughness: 256
+    - _RoughnessScale: 2.5
+    - _SSSBase: -3.5
+    - _SSSDistortion: 1
+    - _SSSPow: 3.9
+    - _SSSScale: 15
+    - _SSSStrength: 0.65
+    - _SSfaceSun: 48
+    - _SSfaceSunFallOff: 41
     - _Sharpness: 1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -215,12 +217,12 @@ Material:
     m_Colors:
     - _Amplitude: {r: 1, g: 1, b: 1, a: 1}
     - _BubblesColor: {r: 0.3798505, g: 0.8181261, b: 0.8301887, a: 1}
-    - _Color: {r: 0.0060074753, g: 0.13363472, b: 0.254717, a: 1}
+    - _Color: {r: 0.014017441, g: 0.09615248, b: 0.1981132, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FoamColor: {r: 1, g: 1, b: 1, a: 1}
     - _OceanColorDeep: {r: 0, g: 0.06240057, b: 0.11320752, a: 1}
     - _OceanColorShallow: {r: 0.078097194, g: 0.4429451, b: 0.6132076, a: 1}
-    - _SSSColor: {r: 0.36209506, g: 0.90263134, b: 0.9716981, a: 1}
+    - _SSSColor: {r: 0.3443396, g: 0.8004512, b: 1, a: 1}
     - _Specular: {r: 0.8915094, g: 0.9782562, b: 1, a: 1}
     - _Speed: {r: 1, g: 1, b: 1, a: 1}
     - _WaveLength: {r: 1, g: 1, b: 1, a: 1}

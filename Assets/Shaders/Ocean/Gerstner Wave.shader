@@ -151,6 +151,7 @@ Shader "Unlit/Gerstner Wave"
 
                 return float4(ambient + diffuse + specular,1.0);
                 //return float4(i.worldNormal,1.0);
+                //return float4(i.TtoW0.z,i.TtoW1.z,i.TtoW2.z,0);
             }
             ENDCG
         }

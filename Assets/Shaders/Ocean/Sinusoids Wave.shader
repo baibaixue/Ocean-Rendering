@@ -121,6 +121,7 @@ Shader "Unlit/Sinusoids Wave"
                 fixed3 specular = _LightColor0.rgb * _Specular.rgb * pow(saturate(dot(bump,halfDir)),_Gloss);
 
                 return float4(ambient + diffuse + specular,1.0);
+                //return float4(i.TtoW0.x,i.TtoW1.x,i.TtoW2.x,0);
             }
             ENDCG
         }
