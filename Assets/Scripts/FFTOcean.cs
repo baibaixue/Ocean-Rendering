@@ -246,6 +246,7 @@ public class FFTOcean : MonoBehaviour
             }
         }
         GaussianNoise.Apply();
+
         SaveIntoFile("GaussianNoise",GaussianNoise);
         return GaussianNoise;
     }
@@ -298,6 +299,7 @@ public class FFTOcean : MonoBehaviour
             }
         }
         Butterfly.Apply();
+
         SaveIntoFile("Butterfly", Butterfly);
         return Butterfly;
     }
@@ -440,9 +442,12 @@ public class FFTOcean : MonoBehaviour
     /// </summary>
     private void SaveIntoFile(string name, Texture2D texture)
     {
+
+#if UNITY_EDITOR
         string filename = name + "Texture" + fftSize.ToString() + "x" + fftSize.ToString();
         string path = "Assets/Resources/Textures/";
         UnityEditor.AssetDatabase.CreateAsset(texture, path + filename + ".asset");
+#endif
     }
     /// <summary>
     /// 调试，查看中间输出纹理

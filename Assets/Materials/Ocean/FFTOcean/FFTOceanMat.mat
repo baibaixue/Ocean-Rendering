@@ -48,7 +48,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Cubemap:
-        m_Texture: {fileID: 8900000, guid: 7f5779140d6e64f44a7940b41f49ba81, type: 3}
+        m_Texture: {fileID: 8900000, guid: 65844975f3a977b419b0d5fdff86f07a, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Derivatives0:
@@ -182,11 +182,11 @@ Material:
     - _FoamBiasLOD1: 3.7
     - _FoamBiasLOD2: 3.5
     - _FoamRange: 2.3
-    - _FoamRangeLOD0: 1.19
-    - _FoamRangeLOD1: 1.38
-    - _FoamRangeLOD2: 2.6
-    - _FoamScale: 3.1
-    - _FresnelScale: 0.24
+    - _FoamRangeLOD0: 0.66
+    - _FoamRangeLOD1: 1.63
+    - _FoamRangeLOD2: 2.85
+    - _FoamScale: 3
+    - _FresnelScale: 0.486
     - _Gloss: 183
     - _GlossMapScale: 1
     - _Glossiness: 0.481
@@ -204,7 +204,7 @@ Material:
     - _SSSDistortion: 1
     - _SSSPow: 3.9
     - _SSSScale: 15
-    - _SSSStrength: 0.65
+    - _SSSStrength: 0.498
     - _SSfaceSun: 48
     - _SSfaceSunFallOff: 41
     - _Sharpness: 1

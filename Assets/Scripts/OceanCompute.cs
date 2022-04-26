@@ -2,11 +2,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 [Serializable]
 public class WindData
 {
     public Vector2 windDir;
     public float windSpeed;
+
+    public WindData(int x, int y, int speed)
+    {
+        windDir.x = x;
+        windDir.y = y;
+        windSpeed = speed;
+    }
 }
 public class OceanCompute
 {
@@ -380,9 +391,12 @@ public class OceanCompute
     /// </summary>
     private void SaveIntoFile(string name, Texture2D texture)
     {
+
+#if UNITY_EDITOR
         string filename = name + "Texture" + fftSize.ToString() + "x" + fftSize.ToString();
         string path = "Assets/Resources/Textures/";
         UnityEditor.AssetDatabase.CreateAsset(texture, path + filename + ".asset");
+#endif
     }
     /// <summary>
     /// 调试，查看中间输出纹理

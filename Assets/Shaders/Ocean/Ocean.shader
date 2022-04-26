@@ -15,8 +15,6 @@ Shader "Unlit/Ocean"
         // 次表面散射的基础范围
         _SSSBase("SSS Base", Range(-5,1)) = 0
 
-        _SSfaceSunFallOff("SSS Fall off",Range(0,100)) = 10
-        _SSfaceSun("SS faceSun", Range(0,100)) = 10
         
         // 次表面失真
         _SSSDistortion ("SSS Distortion", Range(0,1)) = 1

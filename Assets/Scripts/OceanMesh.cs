@@ -116,7 +116,7 @@ public class OceanMesh : MonoBehaviour
     /// <summary>
     /// 初始化海洋相关数据
     /// </summary>
-    void InitOceanData()
+    public void InitOceanData()
     {
         float boundary1 = 2 * Mathf.PI / WaveSize_1 * 6f;
         float boundary2 = 2 * Mathf.PI / WaveSize_2 * 6f;
